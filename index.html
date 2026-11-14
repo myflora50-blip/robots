@@ -1,11 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>AETHER-01 // 3D Brushed-Silver AI Humanoid</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet" />
+  <!-- MediaPipe Tasks Vision (Face Landmarker) for high-precision head tracking & expression mirroring -->
+  <script src="https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs" type="module"></script>
   <style>
     :root {
       --bg-studio: #000000;
@@ -24,7 +29,8 @@
       -webkit-user-select: none;
     }
 
-    html, body {
+    html,
+    body {
       margin: 0;
       padding: 0;
       width: 100%;
@@ -35,7 +41,6 @@
       overflow: hidden;
     }
 
-    /* Subtle top-left studio key lighting matching reference */
     .studio-backdrop {
       position: fixed;
       inset: 0;
@@ -46,7 +51,6 @@
       z-index: 0;
     }
 
-    /* 3D Stage */
     .stage-viewport {
       position: fixed;
       inset: 0;
@@ -57,6 +61,7 @@
       z-index: 1;
       cursor: grab;
     }
+
     .stage-viewport:active {
       cursor: grabbing;
     }
@@ -72,39 +77,24 @@
       justify-content: center;
     }
 
-    /* Brushed metal micro-texture overlay */
     .brushed-surface {
       background-image:
-        repeating-linear-gradient(
-          90deg,
-          rgba(255, 255, 255, 0.025) 0px,
-          rgba(255, 255, 255, 0.025) 1px,
-          transparent 1px,
-          transparent 3px
-        ),
-        repeating-linear-gradient(
-          0deg,
-          rgba(0, 0, 0, 0.04) 0px,
-          rgba(0, 0, 0, 0.04) 1px,
-          transparent 1px,
-          transparent 2px
-        );
+        repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.025) 0px, rgba(255, 255, 255, 0.025) 1px, transparent 1px, transparent 3px),
+        repeating-linear-gradient(0deg, rgba(0, 0, 0, 0.04) 0px, rgba(0, 0, 0, 0.04) 1px, transparent 1px, transparent 2px);
     }
 
-    /* Carbon-weave micro-texture for chest armor */
     .carbon-armor {
       background-color: #8b919b;
       background-image:
         radial-gradient(ellipse 68% 58% at 30% 24%, rgba(255, 255, 255, 0.92) 0%, rgba(226, 231, 238, 0.65) 28%, rgba(122, 129, 140, 0.35) 58%, rgba(26, 29, 34, 0.95) 100%),
-        repeating-linear-gradient(45deg, rgba(255,255,255,0.03) 0 1px, transparent 1px 3px),
-        repeating-linear-gradient(-45deg, rgba(0,0,0,0.07) 0 1px, transparent 1px 3px);
+        repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.03) 0 1px, transparent 1px 3px),
+        repeating-linear-gradient(-45deg, rgba(0, 0, 0, 0.07) 0 1px, transparent 1px 3px);
       box-shadow:
         inset 4px 6px 16px rgba(255, 255, 255, 0.65),
         inset -12px -18px 28px rgba(0, 0, 0, 0.88),
         0 18px 40px rgba(0, 0, 0, 0.95);
     }
 
-    /* Glossy Black Mechanical Joint Material */
     .mech-black {
       background:
         radial-gradient(circle at 32% 26%, rgba(255, 255, 255, 0.55) 0%, rgba(120, 126, 136, 0.22) 22%, rgba(14, 16, 20, 0.96) 56%, #020203 100%);
@@ -114,7 +104,6 @@
         0 6px 16px rgba(0, 0, 0, 0.9);
     }
 
-    /* ==================== ROBOT HIERARCHY ==================== */
     .robot-root {
       position: relative;
       width: 340px;
@@ -124,7 +113,6 @@
       cursor: pointer;
     }
 
-    /* ----- HEAD & HELMET ----- */
     .head-pivot {
       position: absolute;
       top: 14px;
@@ -138,7 +126,6 @@
       will-change: transform;
     }
 
-    /* Articulated Glossy Black Mechanical Neck */
     .neck-assembly {
       position: absolute;
       top: 116px;
@@ -149,6 +136,7 @@
       transform-style: preserve-3d;
       z-index: 18;
     }
+
     .neck-cylinder {
       position: absolute;
       inset: 0;
@@ -156,6 +144,7 @@
       background: linear-gradient(90deg, #07080a 0%, #3d424b 24%, #0d0f12 52%, #2b3038 78%, #040506 100%);
       box-shadow: inset 0 2px 4px rgba(255, 255, 255, 0.25), inset 0 -4px 8px rgba(0, 0, 0, 0.95);
     }
+
     .neck-ring {
       position: absolute;
       left: -3px;
@@ -163,10 +152,9 @@
       height: 6px;
       border-radius: 999px;
       background: linear-gradient(90deg, #0b0c0e, #666d78 30%, #14161a 65%, #050507);
-      box-shadow: 0 2px 4px rgba(0,0,0,0.9);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.9);
     }
 
-    /* Aerodynamic Brushed-Silver Helmet Shell */
     .helmet-shell {
       position: relative;
       width: 100%;
@@ -181,7 +169,6 @@
       transform-style: preserve-3d;
     }
 
-    /* Side Temple Ear Pods */
     .temple-pod {
       position: absolute;
       top: 38px;
@@ -189,16 +176,19 @@
       height: 44px;
       border-radius: 10px;
       background: linear-gradient(180deg, #cfd4dc 0%, #5e646e 48%, #15171c 100%);
-      box-shadow: inset 1px 1px 3px rgba(255,255,255,0.6), 0 4px 10px rgba(0,0,0,0.9);
+      box-shadow: inset 1px 1px 3px rgba(255, 255, 255, 0.6), 0 4px 10px rgba(0, 0, 0, 0.9);
     }
+
     .temple-pod.left {
       left: -6px;
       transform: rotateY(-28deg) translateZ(6px);
     }
+
     .temple-pod.right {
       right: -6px;
       transform: rotateY(28deg) translateZ(6px);
     }
+
     .temple-pod::after {
       content: '';
       position: absolute;
@@ -208,7 +198,6 @@
       box-shadow: inset 0 0 4px rgba(56, 189, 248, 0.25);
     }
 
-    /* Curved Obsidian Mirror Visor */
     .visor-frame {
       position: absolute;
       top: 12px;
@@ -227,7 +216,6 @@
       transform: translateZ(14px);
     }
 
-    /* Specular glass streak on visor */
     .visor-glare {
       position: absolute;
       top: 6px;
@@ -235,12 +223,11 @@
       width: 42px;
       height: 22px;
       border-radius: 50%;
-      background: linear-gradient(135deg, rgba(255,255,255,0.45) 0%, rgba(255,255,255,0) 75%);
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0) 75%);
       transform: rotate(-18deg);
       pointer-events: none;
     }
 
-    /* Visor Scan Beam */
     .visor-scan-beam {
       position: absolute;
       left: 0;
@@ -253,16 +240,22 @@
       pointer-events: none;
       transition: opacity 0.2s ease;
     }
+
     .scanning .visor-scan-beam {
       opacity: 1;
       animation: visorSweep 1.1s ease-in-out infinite alternate;
     }
+
     @keyframes visorSweep {
-      0% { top: 14%; }
-      100% { top: 84%; }
+      0% {
+        top: 14%;
+      }
+
+      100% {
+        top: 84%;
+      }
     }
 
-    /* Eyes & Mouth Face Layer inside Visor */
     .face-matrix {
       position: absolute;
       inset: 0;
@@ -295,11 +288,11 @@
         width 0.14s ease,
         border-radius 0.16s ease,
         transform 0.12s ease,
-        background 0.16s ease;
+        background 0.16s ease,
+        box-shadow 0.16s ease;
       overflow: hidden;
     }
 
-    /* Subtle dark pupil core for authentic gaze focus */
     .led-pupil {
       position: absolute;
       width: 5px;
@@ -312,21 +305,29 @@
       transition: transform 0.08s linear, opacity 0.15s ease;
     }
 
-    /* Eye Expressions */
     .led-eye.blink {
       height: 2px !important;
       border-radius: 2px !important;
       transform: scaleX(1.12);
     }
+
     .led-eye.wide {
       width: 17px;
       height: 22px;
       box-shadow: 0 0 12px #ffffff, 0 0 24px #38bdf8;
     }
+
     .led-eye.squint {
       height: 9px;
       border-radius: 6px;
     }
+
+    .led-eye.half_closed {
+      height: 11px;
+      border-radius: 6px 6px 9px 9px;
+      opacity: 0.78;
+    }
+
     /* Happy ^ ^ arc eyes */
     .led-eye.happy {
       width: 17px;
@@ -336,9 +337,11 @@
       border-radius: 0;
       overflow: visible;
     }
+
     .led-eye.happy .led-pupil {
       opacity: 0;
     }
+
     .led-eye.happy::before {
       content: '';
       position: absolute;
@@ -350,7 +353,74 @@
       filter: drop-shadow(0 0 6px #38bdf8);
     }
 
-    /* 5-Bar Digital LED Mouth */
+    /* Thinking: eyes shifted up + soft squint */
+    .face-matrix.thinking .eyes-row {
+      transform: translateY(-3px);
+    }
+
+    .face-matrix.thinking .led-eye {
+      height: 14px;
+      border-radius: 7px 7px 4px 4px;
+      background: radial-gradient(circle at 50% 30%, #ffffff 10%, #d8f8ff 58%, #38bdf8 100%);
+    }
+
+    /* Confused: asymmetric - left squint, right wide */
+    .face-matrix.confused .led-eye:nth-child(1) {
+      height: 9px;
+      border-radius: 6px;
+      transform: rotate(-4deg);
+    }
+
+    .face-matrix.confused .led-eye:nth-child(2) {
+      width: 17px;
+      height: 21px;
+      transform: rotate(3deg);
+      box-shadow: 0 0 12px #ffffff, 0 0 22px #38bdf8;
+    }
+
+    /* Empathetic: soft squint both eyes, warm glow */
+    .face-matrix.empathetic .led-eye {
+      height: 12px;
+      border-radius: 7px;
+      background: radial-gradient(circle at 50% 50%, #ffffff 10%, #ffe4b8 55%, #ff9a3c 100%);
+      box-shadow: 0 0 10px rgba(255, 220, 180, 0.85), 0 0 20px rgba(255, 154, 60, 0.55);
+    }
+
+    /* Wink: right eye closed */
+    .face-matrix.wink .led-eye:nth-child(1) {
+      height: 17px;
+      background: radial-gradient(circle at 50% 45%, #ffffff 10%, #d8f8ff 58%, #38bdf8 100%);
+    }
+
+    .face-matrix.wink .led-eye:nth-child(2) {
+      height: 2px;
+      border-radius: 2px;
+      transform: scaleX(1.12);
+      background: #dff9ff;
+    }
+
+    .face-matrix.wink .led-eye:nth-child(2) .led-pupil {
+      opacity: 0;
+    }
+
+    /* Alert: bright wide eyes, sharper glow */
+    .face-matrix.alert .led-eye {
+      width: 17px;
+      height: 22px;
+      border-radius: 9px;
+      background: radial-gradient(circle at 50% 45%, #ffffff 20%, #e0f2fe 60%, #ff6b6b 100%);
+      box-shadow: 0 0 14px #ffffff, 0 0 28px #ff6b6b, 0 0 40px rgba(255, 107, 107, 0.4);
+    }
+
+    /* Sleepy: half closed, dim */
+    .face-matrix.sleepy .led-eye {
+      height: 8px;
+      border-radius: 4px;
+      opacity: 0.55;
+      background: radial-gradient(circle at 50% 30%, #b8e8ff 10%, #6db8d8 60%, #1e5a7a 100%);
+      box-shadow: 0 0 4px rgba(56, 189, 248, 0.3);
+    }
+
     .led-mouth {
       display: flex;
       align-items: center;
@@ -360,6 +430,7 @@
       margin-top: 13px;
       transition: transform 0.18s ease;
     }
+
     .mouth-bar {
       width: 3px;
       height: 3.5px;
@@ -369,37 +440,106 @@
       transition: height 0.07s ease, transform 0.15s ease, border-radius 0.15s ease;
     }
 
-    /* Gentle smiling arc when idle/happy */
     .led-mouth.smile .mouth-bar:nth-child(1),
     .led-mouth.smile .mouth-bar:nth-child(5) {
       transform: translateY(-2px);
       height: 3px;
     }
+
     .led-mouth.smile .mouth-bar:nth-child(2),
     .led-mouth.smile .mouth-bar:nth-child(4) {
       transform: translateY(-0.5px);
       height: 3.5px;
     }
+
     .led-mouth.smile .mouth-bar:nth-child(3) {
       transform: translateY(0.5px);
       height: 3.5px;
     }
 
-    /* Laugh open D-arc mouth */
     .led-mouth.laugh .mouth-bar:nth-child(1),
     .led-mouth.laugh .mouth-bar:nth-child(5) {
       height: 6px;
       transform: translateY(-1px);
     }
+
     .led-mouth.laugh .mouth-bar:nth-child(2),
     .led-mouth.laugh .mouth-bar:nth-child(4) {
       height: 11px;
     }
+
     .led-mouth.laugh .mouth-bar:nth-child(3) {
       height: 14px;
     }
 
-    /* ----- TORSO & WAIST ----- */
+    /* Flat mouth for neutral/thinking */
+    .led-mouth.flat .mouth-bar {
+      height: 3px;
+      transform: translateY(0);
+    }
+
+    /* Frown for confused/sleepy */
+    .led-mouth.frown .mouth-bar:nth-child(1),
+    .led-mouth.frown .mouth-bar:nth-child(5) {
+      transform: translateY(2px);
+      height: 3px;
+    }
+
+    .led-mouth.frown .mouth-bar:nth-child(2),
+    .led-mouth.frown .mouth-bar:nth-child(4) {
+      transform: translateY(0.5px);
+      height: 3px;
+    }
+
+    .led-mouth.frown .mouth-bar:nth-child(3) {
+      transform: translateY(-0.5px);
+      height: 3px;
+    }
+
+    /* O mouth for surprised/alert */
+    .led-mouth.o_shape .mouth-bar:nth-child(1),
+    .led-mouth.o_shape .mouth-bar:nth-child(5) {
+      height: 4px;
+      transform: translateY(-2px);
+    }
+
+    .led-mouth.o_shape .mouth-bar:nth-child(2),
+    .led-mouth.o_shape .mouth-bar:nth-child(4) {
+      height: 9px;
+      transform: translateY(-1px);
+    }
+
+    .led-mouth.o_shape .mouth-bar:nth-child(3) {
+      height: 12px;
+      transform: translateY(-1px);
+    }
+
+    /* Wry smirk for wink/empathetic */
+    .led-mouth.smirk .mouth-bar:nth-child(1) {
+      transform: translateY(1px);
+      height: 3px;
+    }
+
+    .led-mouth.smirk .mouth-bar:nth-child(2) {
+      transform: translateY(0);
+      height: 3.5px;
+    }
+
+    .led-mouth.smirk .mouth-bar:nth-child(3) {
+      transform: translateY(-1px);
+      height: 4px;
+    }
+
+    .led-mouth.smirk .mouth-bar:nth-child(4) {
+      transform: translateY(-2px);
+      height: 4.5px;
+    }
+
+    .led-mouth.smirk .mouth-bar:nth-child(5) {
+      transform: translateY(-3px);
+      height: 4px;
+    }
+
     .torso-pivot {
       position: absolute;
       top: 138px;
@@ -413,7 +553,6 @@
       will-change: transform;
     }
 
-    /* Sculpted V-Taper Brushed-Silver Chest Armor */
     .chest-armor {
       position: relative;
       width: 172px;
@@ -424,7 +563,6 @@
       transform: translateZ(10px);
     }
 
-    /* Subtle central sternum contour line */
     .chest-armor::before {
       content: '';
       position: absolute;
@@ -433,11 +571,10 @@
       width: 2px;
       height: 120px;
       margin-left: -1px;
-      background: linear-gradient(180deg, rgba(255,255,255,0.22), rgba(0,0,0,0.28) 65%, transparent);
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.22), rgba(0, 0, 0, 0.28) 65%, transparent);
       opacity: 0.55;
     }
 
-    /* Collarbone neck socket */
     .collar-socket {
       position: absolute;
       top: -4px;
@@ -450,7 +587,6 @@
       box-shadow: inset 0 4px 8px #000000;
     }
 
-    /* Exposed Glossy Black Mechanical Waist Spine */
     .waist-spine {
       position: relative;
       width: 68px;
@@ -458,21 +594,21 @@
       margin: -14px auto 0;
       border-radius: 14px 14px 18px 18px;
       background: linear-gradient(90deg, #050608 0%, #343942 26%, #0b0d10 52%, #242830 80%, #030304 100%);
-      box-shadow: inset 0 4px 10px rgba(0,0,0,0.95), 0 8px 18px rgba(0,0,0,0.95);
+      box-shadow: inset 0 4px 10px rgba(0, 0, 0, 0.95), 0 8px 18px rgba(0, 0, 0, 0.95);
       z-index: -1;
       display: flex;
       flex-direction: column;
       justify-content: space-evenly;
       padding: 6px 4px;
     }
+
     .spine-rib {
       height: 6px;
       border-radius: 999px;
       background: linear-gradient(90deg, #090a0d, #555c68 32%, #111318 70%, #050507);
-      box-shadow: 0 2px 3px rgba(0,0,0,0.9);
+      box-shadow: 0 2px 3px rgba(0, 0, 0, 0.9);
     }
 
-    /* ----- ARMS (LEFT & RIGHT) ----- */
     .arm-pivot {
       position: absolute;
       top: 14px;
@@ -483,14 +619,15 @@
       z-index: 22;
       will-change: transform;
     }
+
     .arm-pivot.left {
       left: -34px;
     }
+
     .arm-pivot.right {
       right: -34px;
     }
 
-    /* Glossy Black Ball-and-Socket Shoulder */
     .shoulder-ball {
       position: absolute;
       top: 2px;
@@ -502,7 +639,6 @@
       z-index: 1;
     }
 
-    /* Sculpted Silver Upper-Arm Shell */
     .upper-arm-shell {
       position: absolute;
       top: 12px;
@@ -511,15 +647,14 @@
       height: 86px;
       margin-left: -24px;
       border-radius: 26px 26px 18px 18px;
-      background: radial-gradient(ellipse 70% 60% at 30% 24%, rgba(255,255,255,0.92) 0%, rgba(196,202,212,0.72) 34%, rgba(72,78,88,0.55) 68%, #121418 100%);
+      background: radial-gradient(ellipse 70% 60% at 30% 24%, rgba(255, 255, 255, 0.92) 0%, rgba(196, 202, 212, 0.72) 34%, rgba(72, 78, 88, 0.55) 68%, #121418 100%);
       box-shadow:
-        inset 3px 4px 10px rgba(255,255,255,0.7),
-        inset -6px -10px 16px rgba(0,0,0,0.9),
-        0 10px 20px rgba(0,0,0,0.9);
+        inset 3px 4px 10px rgba(255, 255, 255, 0.7),
+        inset -6px -10px 16px rgba(0, 0, 0, 0.9),
+        0 10px 20px rgba(0, 0, 0, 0.9);
       z-index: 2;
     }
 
-    /* Forearm Pivot (Elbow Hinge) */
     .forearm-pivot {
       position: absolute;
       top: 90px;
@@ -533,7 +668,6 @@
       will-change: transform;
     }
 
-    /* Exposed Black Mechanical Elbow Hinge */
     .elbow-joint {
       position: absolute;
       top: 0;
@@ -544,6 +678,7 @@
       border-radius: 12px;
       z-index: 1;
     }
+
     .elbow-joint::after {
       content: '';
       position: absolute;
@@ -555,7 +690,6 @@
       background: linear-gradient(90deg, #090a0c, #5d6470 35%, #121418 75%, #050507);
     }
 
-    /* Sculpted Silver Forearm Shell */
     .forearm-shell {
       position: absolute;
       top: 18px;
@@ -564,15 +698,14 @@
       height: 78px;
       margin-left: -22px;
       border-radius: 16px 16px 14px 14px / 22px 22px 50px 50px;
-      background: radial-gradient(ellipse 72% 62% at 28% 24%, rgba(255,255,255,0.92) 0%, rgba(190,196,206,0.72) 36%, rgba(68,74,84,0.58) 70%, #111317 100%);
+      background: radial-gradient(ellipse 72% 62% at 28% 24%, rgba(255, 255, 255, 0.92) 0%, rgba(190, 196, 206, 0.72) 36%, rgba(68, 74, 84, 0.58) 70%, #111317 100%);
       box-shadow:
-        inset 2px 4px 9px rgba(255,255,255,0.7),
-        inset -5px -8px 14px rgba(0,0,0,0.9),
-        0 8px 16px rgba(0,0,0,0.9);
+        inset 2px 4px 9px rgba(255, 255, 255, 0.7),
+        inset -5px -8px 14px rgba(0, 0, 0, 0.9),
+        0 8px 16px rgba(0, 0, 0, 0.9);
       z-index: 2;
     }
 
-    /* Articulated Black Mechanical Hand & Fingers */
     .hand-assembly {
       position: absolute;
       top: 92px;
@@ -583,37 +716,41 @@
       transform-origin: 50% 4px;
       z-index: 1;
     }
+
     .wrist-ball {
       width: 18px;
       height: 12px;
       margin: 0 auto;
       border-radius: 8px;
     }
+
     .palm-plate {
       width: 24px;
       height: 14px;
       margin: -2px auto 0;
       border-radius: 6px 6px 8px 8px;
     }
+
     .fingers-cluster {
       display: flex;
       justify-content: center;
       gap: 2px;
       margin-top: 1px;
     }
+
     .finger-digit {
       width: 4px;
       height: 11px;
       border-radius: 2px 2px 4px 4px;
       background: linear-gradient(180deg, #323740 0%, #090a0d 100%);
-      box-shadow: inset 0 1px 1px rgba(255,255,255,0.3);
+      box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.3);
     }
+
     .finger-digit:nth-child(2),
     .finger-digit:nth-child(3) {
       height: 13px;
     }
 
-    /* ----- PELVIS & LEGS ----- */
     .pelvis-pivot {
       position: absolute;
       top: 332px;
@@ -627,7 +764,6 @@
       will-change: transform;
     }
 
-    /* Articulated Glossy Black Pelvis Frame */
     .pelvis-frame {
       position: relative;
       width: 116px;
@@ -636,9 +772,9 @@
       border-radius: 16px 16px 26px 26px;
       background: linear-gradient(180deg, #2b3038 0%, #0c0e12 45%, #040507 100%);
       box-shadow:
-        inset 0 2px 6px rgba(255,255,255,0.28),
-        inset 0 -6px 12px rgba(0,0,0,0.95),
-        0 10px 20px rgba(0,0,0,0.95);
+        inset 0 2px 6px rgba(255, 255, 255, 0.28),
+        inset 0 -6px 12px rgba(0, 0, 0, 0.95),
+        0 10px 20px rgba(0, 0, 0, 0.95);
     }
 
     .hip-joint {
@@ -648,10 +784,15 @@
       height: 36px;
       border-radius: 50%;
     }
-    .hip-joint.left { left: -6px; }
-    .hip-joint.right { right: -6px; }
 
-    /* Sculpted Brushed-Silver Thigh Armor Plates fading into studio floor */
+    .hip-joint.left {
+      left: -6px;
+    }
+
+    .hip-joint.right {
+      right: -6px;
+    }
+
     .thigh-leg {
       position: absolute;
       top: 38px;
@@ -659,17 +800,24 @@
       height: 175px;
       border-radius: 24px 24px 16px 16px;
       background:
-        linear-gradient(180deg, rgba(0,0,0,0) 42%, rgba(0,0,0,0.82) 78%, #000000 100%),
-        radial-gradient(ellipse 72% 55% at 30% 18%, rgba(255,255,255,0.92) 0%, rgba(188,195,206,0.72) 34%, rgba(64,70,80,0.55) 68%, #0d0f13 100%);
+        linear-gradient(180deg, rgba(0, 0, 0, 0) 42%, rgba(0, 0, 0, 0.82) 78%, #000000 100%),
+        radial-gradient(ellipse 72% 55% at 30% 18%, rgba(255, 255, 255, 0.92) 0%, rgba(188, 195, 206, 0.72) 34%, rgba(64, 70, 80, 0.55) 68%, #0d0f13 100%);
       box-shadow:
-        inset 3px 4px 10px rgba(255,255,255,0.65),
-        inset -6px -10px 18px rgba(0,0,0,0.95);
+        inset 3px 4px 10px rgba(255, 255, 255, 0.65),
+        inset -6px -10px 18px rgba(0, 0, 0, 0.95);
       overflow: hidden;
     }
-    .thigh-leg.left { left: 14px; transform: rotate(1.5deg); }
-    .thigh-leg.right { right: 14px; transform: rotate(-1.5deg); }
 
-    /* Knee mechanical detail before fade */
+    .thigh-leg.left {
+      left: 14px;
+      transform: rotate(1.5deg);
+    }
+
+    .thigh-leg.right {
+      right: 14px;
+      transform: rotate(-1.5deg);
+    }
+
     .knee-cap {
       position: absolute;
       top: 112px;
@@ -682,19 +830,17 @@
       opacity: 0.7;
     }
 
-    /* Bottom studio floor fade mask */
     .floor-vignette {
       position: absolute;
       bottom: -10px;
       left: -40px;
       right: -40px;
       height: 95px;
-      background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.88) 65%, #000000 100%);
+      background: linear-gradient(180deg, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.88) 65%, #000000 100%);
       pointer-events: none;
       z-index: 40;
     }
 
-    /* ==================== UI CONTROLS & HUD ==================== */
     .glass-pill {
       background: rgba(16, 18, 22, 0.74);
       backdrop-filter: blur(16px);
@@ -713,11 +859,13 @@
       color: #d4d4d8;
       transition: all 0.18s ease;
     }
+
     .util-btn:hover {
       background: rgba(255, 255, 255, 0.12);
       color: #ffffff;
       transform: translateY(-1px);
     }
+
     .util-btn:active {
       transform: scale(0.94);
     }
@@ -736,10 +884,12 @@
       align-items: center;
       gap: 6px;
     }
+
     .dock-btn:hover {
       color: #ffffff;
       background: rgba(255, 255, 255, 0.08);
     }
+
     .dock-btn.active {
       color: #ffffff;
       background: rgba(255, 255, 255, 0.14);
@@ -752,19 +902,29 @@
       border: 1px solid rgba(56, 189, 248, 0.42);
       color: #e0f2fe;
     }
+
     .speak-btn:hover {
       background: linear-gradient(135deg, rgba(56, 189, 248, 0.36), rgba(14, 165, 233, 0.24));
       color: #ffffff;
     }
+
     .speak-btn.recording {
       background: linear-gradient(135deg, rgba(239, 68, 68, 0.38), rgba(220, 38, 38, 0.24));
       border-color: rgba(248, 113, 113, 0.75);
       color: #fee2e2;
       animation: pulseRec 1.2s infinite;
     }
+
     @keyframes pulseRec {
-      0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.45); }
-      50% { box-shadow: 0 0 0 8px rgba(239, 68, 68, 0); }
+
+      0%,
+      100% {
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.45);
+      }
+
+      50% {
+        box-shadow: 0 0 0 8px rgba(239, 68, 68, 0);
+      }
     }
 
     .cam-btn.active-cam {
@@ -773,47 +933,78 @@
       color: #d1fae5;
     }
 
-    /* Hide scrollbar on compact mobile dock */
-    .no-scrollbar::-webkit-scrollbar { display: none; }
-    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* Tiny model-status badge in corner */
+    .model-badge {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 0.05em;
+      color: #71717a;
+    }
+
+    .model-badge .dot {
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #38bdf8;
+      margin-right: 6px;
+      vertical-align: middle;
+      box-shadow: 0 0 6px #38bdf8;
+    }
   </style>
 </head>
+
 <body>
-  <!-- Pitch-black studio backdrop with subtle top-left key light -->
   <div class="studio-backdrop"></div>
 
-  <!-- Top-Left Minimal Status Indicator -->
+  <!-- Top-Left Status -->
   <div class="fixed top-4 left-4 z-50 flex items-center gap-2.5 pointer-events-none">
     <div class="glass-pill px-3.5 py-1.5 rounded-full flex items-center gap-2">
       <span id="statusDot" class="w-2 h-2 rounded-full bg-sky-400 shadow-[0_0_8px_#38bdf8]"></span>
       <span class="font-mono text-[11px] tracking-wider uppercase text-zinc-300 font-semibold">AETHER-01</span>
       <span class="text-zinc-600">|</span>
-      <span id="statusText" class="text-[11px] text-zinc-400">Ready // English AI</span>
+      <span id="statusText" class="text-[11px] text-zinc-400">Ready // Groq+Gemini</span>
+    </div>
+    <div id="modelBadge" class="glass-pill px-2.5 py-1 rounded-full model-badge hidden">
+      <span class="dot"></span><span id="modelBadgeText">no model</span>
     </div>
   </div>
 
-  <!-- Top-Right Circular Utility Buttons (Reset View, Sound Toggle, Fullscreen) -->
+  <!-- Top-Right Utility -->
   <div class="fixed top-4 right-4 z-50 flex items-center gap-2">
     <button id="btnReset" class="glass-pill util-btn" title="Reset View & Pose">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
         <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
         <path d="M3 3v5h5" />
       </svg>
     </button>
     <button id="btnSound" class="glass-pill util-btn" title="Toggle Audio & Voice">
-      <svg id="iconSoundOn" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <svg id="iconSoundOn" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
         <path d="M15.54 8.46a5 5 0 0 1 0 7.07" />
         <path d="M19.07 4.93a10 10 0 0 1 0 14.14" />
       </svg>
-      <svg id="iconSoundOff" class="hidden text-zinc-500" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <svg id="iconSoundOff" class="hidden text-zinc-500" width="16" height="16" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
         <line x1="23" y1="9" x2="17" y2="15" />
         <line x1="17" y1="9" x2="23" y2="15" />
       </svg>
     </button>
     <button id="btnFullscreen" class="glass-pill util-btn" title="Toggle Fullscreen">
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round">
         <polyline points="15 3 21 3 21 9" />
         <polyline points="9 21 3 21 3 15" />
         <line x1="21" y1="3" x2="14" y2="10" />
@@ -822,38 +1013,42 @@
     </button>
   </div>
 
-  <!-- Corner Webcam PIP Mirror Preview (Shown when Head Cam is active) -->
+  <!-- Webcam PIP -->
   <div id="camPipContainer" class="fixed top-16 right-4 z-40 hidden flex-col items-end gap-2">
-    <div id="camPipBox" class="glass-pill p-1.5 rounded-2xl overflow-hidden relative w-44 sm:w-52 shadow-2xl border border-emerald-500/30 transition-all">
+    <div id="camPipBox"
+      class="glass-pill p-1.5 rounded-2xl overflow-hidden relative w-44 sm:w-52 shadow-2xl border border-emerald-500/30 transition-all">
       <div class="relative w-full aspect-[4/3] rounded-xl overflow-hidden bg-zinc-950">
         <video id="webcamVideo" autoplay playsinline muted class="w-full h-full object-cover scale-x-[-1]"></video>
         <canvas id="reticleCanvas" class="absolute inset-0 w-full h-full pointer-events-none"></canvas>
         <div class="absolute top-1.5 left-2 flex items-center gap-1.5 bg-black/65 px-2 py-0.5 rounded-full">
           <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-          <span id="camTrackLabel" class="font-mono text-[9px] uppercase tracking-wider text-emerald-300">Head Track</span>
+          <span id="camTrackLabel" class="font-mono text-[9px] uppercase tracking-wider text-emerald-300">Face
+            Mesh</span>
         </div>
       </div>
       <div class="flex items-center justify-between px-1.5 pt-1.5 pb-0.5">
-        <button id="btnLookAtMe" class="text-[11px] font-medium text-emerald-300 hover:text-white bg-emerald-500/15 hover:bg-emerald-500/30 border border-emerald-500/30 px-2.5 py-1 rounded-full transition flex items-center gap-1">
-          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg>
+        <button id="btnLookAtMe"
+          class="text-[11px] font-medium text-emerald-300 hover:text-white bg-emerald-500/15 hover:bg-emerald-500/30 border border-emerald-500/30 px-2.5 py-1 rounded-full transition flex items-center gap-1">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+            <circle cx="12" cy="12" r="3" />
+          </svg>
           Look at Me
         </button>
-        <button id="btnTogglePipMin" class="text-[10px] text-zinc-400 hover:text-white px-2 py-1 rounded-full hover:bg-white/10 transition">
-          Hide PIP
-        </button>
+        <button id="btnTogglePipMin"
+          class="text-[10px] text-zinc-400 hover:text-white px-2 py-1 rounded-full hover:bg-white/10 transition">Hide
+          PIP</button>
       </div>
     </div>
-    <button id="btnRestorePip" class="hidden glass-pill px-3 py-1.5 rounded-full text-[11px] text-emerald-300 border border-emerald-500/30 hover:bg-white/10 transition">
-      Show Head Cam PIP
-    </button>
+    <button id="btnRestorePip"
+      class="hidden glass-pill px-3 py-1.5 rounded-full text-[11px] text-emerald-300 border border-emerald-500/30 hover:bg-white/10 transition">Show
+      Head Cam PIP</button>
   </div>
 
   <!-- 3D Humanoid Stage -->
   <main id="stageViewport" class="stage-viewport">
     <div id="robotWorld" class="robot-world">
-      <div id="robotRoot" class="robot-root" title="Click me to interact or make me laugh!">
-        
-        <!-- HEAD & VISOR -->
+      <div id="robotRoot" class="robot-root" title="Click me to interact!">
         <div id="headPivot" class="head-pivot">
           <div class="helmet-shell brushed-surface">
             <div class="temple-pod left"></div>
@@ -863,20 +1058,20 @@
               <div class="visor-scan-beam"></div>
               <div id="faceMatrix" class="face-matrix">
                 <div class="eyes-row">
-                  <div id="eyeLeft" class="led-eye"><div id="pupilLeft" class="led-pupil"></div></div>
-                  <div id="eyeRight" class="led-eye"><div id="pupilRight" class="led-pupil"></div></div>
+                  <div id="eyeLeft" class="led-eye">
+                    <div id="pupilLeft" class="led-pupil"></div>
+                  </div>
+                  <div id="eyeRight" class="led-eye">
+                    <div id="pupilRight" class="led-pupil"></div>
+                  </div>
                 </div>
                 <div id="ledMouth" class="led-mouth smile">
-                  <span class="mouth-bar"></span>
-                  <span class="mouth-bar"></span>
-                  <span class="mouth-bar"></span>
-                  <span class="mouth-bar"></span>
-                  <span class="mouth-bar"></span>
+                  <span class="mouth-bar"></span><span class="mouth-bar"></span><span class="mouth-bar"></span><span
+                    class="mouth-bar"></span><span class="mouth-bar"></span>
                 </div>
               </div>
             </div>
           </div>
-          <!-- Articulated Glossy Black Mechanical Neck -->
           <div class="neck-assembly">
             <div class="neck-cylinder"></div>
             <div class="neck-ring" style="top: 6px;"></div>
@@ -885,13 +1080,10 @@
           </div>
         </div>
 
-        <!-- TORSO & ARMS -->
         <div id="torsoPivot" class="torso-pivot">
           <div class="chest-armor">
             <div class="collar-socket"></div>
           </div>
-
-          <!-- Left Arm -->
           <div id="armLeft" class="arm-pivot left">
             <div class="shoulder-ball mech-black"></div>
             <div class="upper-arm-shell brushed-surface"></div>
@@ -902,16 +1094,12 @@
                 <div class="wrist-ball mech-black"></div>
                 <div class="palm-plate mech-black"></div>
                 <div class="fingers-cluster">
-                  <span class="finger-digit"></span>
-                  <span class="finger-digit"></span>
-                  <span class="finger-digit"></span>
-                  <span class="finger-digit"></span>
+                  <span class="finger-digit"></span><span class="finger-digit"></span><span
+                    class="finger-digit"></span><span class="finger-digit"></span>
                 </div>
               </div>
             </div>
           </div>
-
-          <!-- Right Arm -->
           <div id="armRight" class="arm-pivot right">
             <div class="shoulder-ball mech-black"></div>
             <div class="upper-arm-shell brushed-surface"></div>
@@ -922,16 +1110,12 @@
                 <div class="wrist-ball mech-black"></div>
                 <div class="palm-plate mech-black"></div>
                 <div class="fingers-cluster">
-                  <span class="finger-digit"></span>
-                  <span class="finger-digit"></span>
-                  <span class="finger-digit"></span>
-                  <span class="finger-digit"></span>
+                  <span class="finger-digit"></span><span class="finger-digit"></span><span
+                    class="finger-digit"></span><span class="finger-digit"></span>
                 </div>
               </div>
             </div>
           </div>
-
-          <!-- Exposed Glossy Black Mechanical Waist Spine -->
           <div class="waist-spine">
             <div class="spine-rib"></div>
             <div class="spine-rib"></div>
@@ -939,7 +1123,6 @@
           </div>
         </div>
 
-        <!-- PELVIS & THIGHS -->
         <div id="pelvisPivot" class="pelvis-pivot">
           <div class="pelvis-frame">
             <div class="hip-joint left mech-black"></div>
@@ -953,104 +1136,167 @@
           </div>
           <div class="floor-vignette"></div>
         </div>
-
       </div>
     </div>
   </main>
 
-  <!-- Floating AI Subtitle & Live Voice Transcript HUD -->
-  <div class="fixed bottom-20 left-1/2 -translate-x-1/2 z-40 w-[92%] max-w-xl flex flex-col items-center gap-2 pointer-events-none">
-    <!-- Live Mic Interim Transcript + Audio Level Meter -->
+  <!-- Subtitle + Voice HUD -->
+  <div
+    class="fixed bottom-24 left-1/2 -translate-x-1/2 z-40 w-[92%] max-w-xl flex flex-col items-center gap-2 pointer-events-none">
     <div id="voiceHud" class="hidden glass-pill px-4 py-2 rounded-full flex items-center gap-3 max-w-full">
       <div class="flex items-center gap-1 h-3">
         <span id="micBar1" class="w-1 h-1.5 bg-sky-400 rounded-full transition-all duration-75"></span>
         <span id="micBar2" class="w-1 h-2.5 bg-sky-400 rounded-full transition-all duration-75"></span>
         <span id="micBar3" class="w-1 h-1.5 bg-sky-400 rounded-full transition-all duration-75"></span>
       </div>
-      <span id="liveTranscriptText" class="text-xs text-sky-200 truncate font-medium">Listening in English...</span>
+      <span id="liveTranscriptText" class="text-xs text-sky-200 truncate font-medium">Listening...</span>
     </div>
-
-    <!-- Robot AI Response Bubble -->
-    <div id="aiResponsePill" class="glass-pill px-4 py-2.5 rounded-2xl text-center max-w-lg transition-all duration-300 opacity-95">
+    <div id="aiResponsePill"
+      class="glass-pill px-4 py-2.5 rounded-2xl text-center max-w-lg transition-all duration-300 opacity-95">
       <p id="aiResponseText" class="text-xs sm:text-sm text-zinc-200 leading-relaxed">
-        Hello! I am AETHER-01. Click <span class="text-sky-300 font-medium">Speak</span>, turn on <span class="text-emerald-300 font-medium">Head Cam</span>, or tap me to interact.
+        Hello! I am AETHER-01. Click <span class="text-sky-300 font-medium">Speak</span>, turn on <span
+          class="text-emerald-300 font-medium">Head Cam</span>, or tap me to interact.
       </p>
     </div>
   </div>
 
-  <!-- Sleek Dark Glass Bottom Control Dock -->
-  <footer class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[96%] max-w-4xl">
-    <div class="glass-pill rounded-full p-1.5 flex items-center justify-between gap-1 overflow-x-auto no-scrollbar">
-      <!-- Motion & Gesture Actions -->
+  <!-- Bottom Dock -->
+  <footer class="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 w-[96%] max-w-5xl">
+    <div class="glass-pill rounded-full p-1.5 flex items-center gap-1 overflow-x-auto no-scrollbar">
       <div class="flex items-center gap-1">
-        <button class="dock-btn active" data-action="track" title="Cursor / Head Tracking">Track</button>
-        <button class="dock-btn" data-action="wave" title="Shortcut: 1">Wave</button>
-        <button class="dock-btn" data-action="greet" title="Shortcut: 2">Greet</button>
-        <button class="dock-btn" data-action="scan" title="Shortcut: 3">Scan</button>
-        <button class="dock-btn" data-action="spin" title="Shortcut: 4">Spin 360</button>
-        <button class="dock-btn" data-action="groove" title="Shortcut: 5">Groove</button>
-        <button class="dock-btn" data-action="laugh" title="Shortcut: 6 or Click Robot">Laugh</button>
-        <button class="dock-btn" data-action="hover" title="Shortcut: Space">Hover</button>
+        <button class="dock-btn active" data-action="track" title="Tracking">Track</button>
+        <button class="dock-btn" data-action="wave" title="1">Wave</button>
+        <button class="dock-btn" data-action="greet" title="2">Greet</button>
+        <button class="dock-btn" data-action="nod" title="3">Nod</button>
+        <button class="dock-btn" data-action="shake_head" title="Shift+1">Shake</button>
+        <button class="dock-btn" data-action="tilt_head" title="Shift+2">Tilt</button>
+        <button class="dock-btn" data-action="shrug" title="Shift+3">Shrug</button>
+        <button class="dock-btn" data-action="think" title="Shift+4">Think</button>
+        <button class="dock-btn" data-action="bow" title="Shift+5">Bow</button>
+        <button class="dock-btn" data-action="present" title="Shift+6">Present</button>
       </div>
-
       <div class="h-5 w-px bg-white/10 shrink-0 mx-1"></div>
-
-      <!-- AI Voice, Text Prompt & Head Cam Controls -->
+      <div class="flex items-center gap-1">
+        <button class="dock-btn" data-action="scan" title="Scan">Scan</button>
+        <button class="dock-btn" data-action="spin" title="4">Spin</button>
+        <button class="dock-btn" data-action="groove" title="5">Groove</button>
+        <button class="dock-btn" data-action="celebrate" title="Shift+7">Celebrate</button>
+        <button class="dock-btn" data-action="laugh" title="6">Laugh</button>
+        <button class="dock-btn" data-action="startle" title="Shift+8">Startle</button>
+        <button class="dock-btn" data-action="facepalm" title="Shift+9">Facepalm</button>
+        <button class="dock-btn" data-action="hover" title="7">Hover</button>
+        <button class="dock-btn" data-action="idle_breathe" title="8">Idle</button>
+      </div>
+      <div class="h-5 w-px bg-white/10 shrink-0 mx-1"></div>
       <div class="flex items-center gap-1.5 shrink-0">
-        <button id="btnSpeak" class="dock-btn speak-btn" title="Click or Hold Spacebar to Speak (English)">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
-            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-            <line x1="12" y1="19" x2="12" y2="22"/>
+        <button id="btnSpeak" class="dock-btn speak-btn" title="Click or Spacebar">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+            <line x1="12" y1="19" x2="12" y2="22" />
           </svg>
           <span id="speakBtnLabel">Speak</span>
         </button>
-
-        <button id="btnTypeToggle" class="dock-btn" title="Type an English Message">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+        <button id="btnTypeToggle" class="dock-btn" title="Type a message">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
           </svg>
           <span>Chat</span>
         </button>
-
-        <button id="btnHeadCam" class="dock-btn cam-btn" title="Real-Time Webcam Head Tracking & Vision">
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/>
-            <circle cx="12" cy="13" r="3"/>
+        <button id="btnHeadCam" class="dock-btn cam-btn" title="Webcam head tracking & vision">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+            <circle cx="12" cy="13" r="3" />
           </svg>
           <span id="camBtnLabel">Head Cam</span>
         </button>
       </div>
     </div>
-
-    <!-- Optional Quick English Text Input Drawer -->
-    <form id="chatInputForm" class="hidden mt-2 glass-pill rounded-full p-1 pl-4 flex items-center gap-2 max-w-md mx-auto">
-      <input
-        id="chatInputField"
-        type="text"
-        placeholder="Ask AETHER-01 anything in English..."
-        class="bg-transparent text-xs text-white placeholder-zinc-500 focus:outline-none flex-1"
-        autocomplete="off"
-      />
-      <button type="submit" class="px-3.5 py-1.5 rounded-full bg-sky-500/25 hover:bg-sky-500/40 text-sky-200 text-xs font-medium border border-sky-400/30 transition">
-        Send
-      </button>
+    <form id="chatInputForm"
+      class="hidden mt-2 glass-pill rounded-full p-1 pl-4 flex items-center gap-2 max-w-md mx-auto">
+      <input id="chatInputField" type="text" placeholder="Ask AETHER-01 anything..."
+        class="bg-transparent text-xs text-white placeholder-zinc-500 focus:outline-none flex-1" autocomplete="off" />
+      <button type="submit"
+        class="px-3.5 py-1.5 rounded-full bg-sky-500/25 hover:bg-sky-500/40 text-sky-200 text-xs font-medium border border-sky-400/30 transition">Send</button>
     </form>
   </footer>
 
-  <script>
+  <script type="module">
     /**
-     * AETHER-01 // Interactive 3D Brushed-Silver AI Humanoid
+     * AETHER-01 // Enhanced Interactive 3D AI Humanoid
+     * Step 1 — Frontend-only (Option A)
+     *
      * Architecture:
      * 1. Hierarchical 3D CSS Physics Engine (Eyes -> Head -> Torso -> Arms -> Pelvis)
-     * 2. Web Audio API Robotic Foley, Servo Hum & Multi-Syllable Laugh Synthesizer
-     * 3. Dual-Engine English Voice Recognition (Web Speech API + MediaRecorder Gemini Audio Fallback)
-     * 4. Gemini AI Conversational Brain with Structured Action & Emotion Control
-     * 5. Real-Time Webcam Head Tracking (FaceDetector + Skin/Motion Centroid Fallback) & Multimodal Vision
+     * 2. Web Audio API robotic foley + multi-syllable laugh
+     * 3. Dual-engine voice recognition with VAD silence auto-stop + interim processing
+     * 4. Groq (text chat) + Gemini (vision) streaming with ACTION/EMOTION/REPLY structured prefix
+     * 5. Streaming sentence-chunked TTS for fast reply (robot starts speaking before LLM finishes)
+     * 6. MediaPipe Face Mesh for high-precision head tracking + expression mirroring
+     * 7. 11 LED visor expressions + 19 humanoid gestures
      */
 
-    const apiKey = ""; // Provided automatically at runtime
-    const GEMINI_MODEL = "gemini-2.5-flash";
+    // ==================== LLM CONFIG — GROQ (CHAT) + GEMINI (VISION) ====================
+    // STEP 1 (Option 2): plain HTML file in VS Code Live Server.
+    // Paste BOTH keys below.
+    //
+    // Groq key  → https://console.groq.com/keys     (free, no credit card, 30 RPM / 14k RPD)
+    // Gemini key→ https://aistudio.google.com/apikey (free, 15 RPM / 1500 RPD, native vision)
+    const GROQ_API_KEY = "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";   // <-- PASTE GROQ KEY HERE, e.g. "gsk_..."
+    const GEMINI_API_KEY = "AQ.Ab8RN6IxtM8oT66oPU6ovNERnwm-M3E8Fmafjx6IVGzfHWWf0A"; // <-- PASTE GEMINI KEY HERE, e.g. "AIza..."
+
+    const GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
+    const GEMINI_URL_BASE = "https://generativelanguage.googleapis.com/v1beta/models";
+
+    // Groq chat models (OpenAI-compatible).
+    // Updated 2026-11: llama-3.3-70b-versatile and llama-3.1-8b-instant were
+    // deprecated Aug 2026; gemma2-9b-it is fully decommissioned. Current production
+    // models are openai/gpt-oss-20b (fast) and openai/gpt-oss-120b (quality).
+    const GROQ_MODELS = [
+      "openai/gpt-oss-20b",          // primary: fast 20B OpenAI open-source model
+      "openai/gpt-oss-120b",         // backup: 120B quality model
+      "llama-3.3-70b-versatile",     // legacy backup (may still work on some accounts)
+      "llama-3.1-8b-instant"         // legacy backup
+    ];
+
+    // Gemini models (native vision support, stable IDs).
+    const GEMINI_MODELS = [
+      "gemini-2.0-flash",          // primary vision + fast text
+      "gemini-2.5-flash",          // backup
+      "gemini-2.0-flash-lite"      // last resort
+    ];
+
+    // Per-model fetch timeout (ms). Covers INITIAL fetch + streaming reads via AbortController.
+    const MODEL_FETCH_TIMEOUT_MS = 12000;
+    // If no chunk arrives for this many ms mid-stream, abort and try next model.
+    const STREAM_CHUNK_TIMEOUT_MS = 6000;
+
+    // ==================== SYSTEM PROMPT ====================
+    const SYSTEM_PROMPT = `You are AETHER-01, an advanced, friendly, witty 3D brushed-silver bipedal humanoid robot in a sleek black studio.
+
+Rules:
+1. Respond ONLY in crisp, natural English.
+2. Keep replies concise (1 to 3 short sentences) so they sound great spoken aloud.
+3. You MUST respond using this exact structured format on separate lines, no markdown:
+ACTION:<one gesture name>
+EMOTION:<one expression name>
+REPLY:<your spoken reply, can be multiple sentences>
+
+Available gestures (pick the most fitting one):
+wave, greet, scan, spin, groove, laugh, nod, track, shake_head, shrug, tilt_head, think, present, bow, celebrate, startle, facepalm, idle_breathe, hover
+
+Available visor expressions:
+neutral, happy, curious, surprised, laughing, thinking, confused, empathetic, wink, alert, sleepy
+
+Example response:
+ACTION:wave
+EMOTION:happy
+REPLY:Hello there! My brushed-titanium servos are warmed up and ready. What can I do for you today?
+
+Begin every response with the ACTION line. Do not add any text before ACTION.`;
 
     // ==================== DOM REFERENCES ====================
     const stageViewport = document.getElementById("stageViewport");
@@ -1075,6 +1321,8 @@
 
     const statusDot = document.getElementById("statusDot");
     const statusText = document.getElementById("statusText");
+    const modelBadge = document.getElementById("modelBadge");
+    const modelBadgeText = document.getElementById("modelBadgeText");
     const aiResponseText = document.getElementById("aiResponseText");
     const voiceHud = document.getElementById("voiceHud");
     const liveTranscriptText = document.getElementById("liveTranscriptText");
@@ -1101,11 +1349,12 @@
       currentAction: "track",
       actionStartTime: 0,
       actionDuration: 0,
-      emotion: "neutral", // neutral | happy | curious | surprised | laughing
+      emotion: "neutral",
       isSpeaking: false,
       speechIntensity: 0,
+      lastInteractionTime: performance.now(),
+      idleTimer: null,
 
-      // Orbit / Camera Drag
       orbitYaw: 0,
       orbitPitch: 0,
       targetOrbitYaw: 0,
@@ -1114,38 +1363,25 @@
       dragStartX: 0,
       dragStartY: 0,
 
-      // Pointer & Head Tracking Targets (-1 to 1)
       targetX: 0,
       targetY: 0,
       targetRoll: 0,
       lastPointerMoveTime: 0,
-      pointerSpeed: 0,
+      surpriseTimer: null,
 
-      // Hierarchical Smoothed Physics Values
-      eyeX: 0,
-      eyeY: 0,
-      headYaw: 0,
-      headPitch: 0,
-      headRoll: 0,
-      torsoYaw: 0,
-      torsoPitch: 0,
-      torsoRoll: 0,
-      pelvisYaw: 0,
-      pelvisY: 0,
+      eyeX: 0, eyeY: 0,
+      headYaw: 0, headPitch: 0, headRoll: 0,
+      torsoYaw: 0, torsoPitch: 0, torsoRoll: 0,
+      pelvisYaw: 0, pelvisY: 0,
 
-      // Arms resting ready stance
-      leftShoulderZ: 12,
-      leftShoulderX: 4,
-      leftElbowX: -18,
-      rightShoulderZ: -12,
-      rightShoulderX: 4,
-      rightElbowX: -18,
+      leftShoulderZ: 12, leftShoulderX: 4, leftElbowX: -18,
+      rightShoulderZ: -12, rightShoulderX: 4, rightElbowX: -18,
 
-      // Blinking
       nextBlinkTime: performance.now() + 2400,
       isBlinking: false,
+      winkUntil: 0,
 
-      // Voice Recognition
+      // Voice
       isListening: false,
       recognition: null,
       mediaRecorder: null,
@@ -1154,36 +1390,51 @@
       micAnalyser: null,
       micRafId: null,
       finalTranscriptBuffer: "",
-      speechFallbackTriggered: false,
+      interimTranscript: "",
+      lastVoiceActivityTime: performance.now(),
+      vadSilenceTimer: null,
+      interimProcessTimer: null,
+      preflightInFlight: false,
+      useMobileMode: false,  // set true on mobile or when Web Speech API unavailable
 
-      // Webcam Head Tracking
+      // Camera
       camActive: false,
       camStream: null,
       camRafId: null,
-      faceDetector: null,
-      prevGrayFrame: null,
+      faceLandmarker: null,
+      handLandmarker: null,
       trackedNormX: 0,
       trackedNormY: 0,
       trackedRoll: 0,
       prevHeadYHistory: [],
       prevHeadXHistory: [],
       lastCamReactionTime: 0,
+      lastBlinkMirrorTime: 0,
+      lastSmileMirrorTime: 0,
+      // Hand mirroring (set by runHeadTrackingLoop, consumed by animatePhysics)
+      handMirrorActive: false,
+      handMirrorX: 0,           // -1 (left) to 1 (right), mirrored to user POV
+      handMirrorY: 0,           // -1 (up) to 1 (down)
+      handMirrorSide: "right",  // which robot arm to move: "left" or "right"
+      lastHandSeenTime: 0,
 
-      // Gemini Conversation Memory
-      conversationHistory: []
+      // Conversation memory
+      conversationHistory: [],
+
+      // Currently selected models (auto-failover)
+      activeChatModel: GROQ_MODELS[0],
+      activeVisionModel: GEMINI_MODELS[0],
+      activeProvider: "groq", // "groq" or "gemini" — drives badge label
     };
 
-    // ==================== WEB AUDIO API SOUND ENGINE ====================
+    // ==================== WEB AUDIO SOUND ENGINE ====================
     let audioCtx = null;
-
     function ensureAudioCtx() {
       if (!audioCtx) {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         audioCtx = new AudioContext();
       }
-      if (audioCtx.state === "suspended") {
-        audioCtx.resume().catch(() => {});
-      }
+      if (audioCtx.state === "suspended") audioCtx.resume().catch(() => { });
       return audioCtx;
     }
 
@@ -1197,19 +1448,14 @@
         osc.type = "sine";
         osc.frequency.setValueAtTime(freqStart, now);
         osc.frequency.exponentialRampToValueAtTime(freqEnd, now + duration);
-
         gain.gain.setValueAtTime(0.001, now);
         gain.gain.linearRampToValueAtTime(gainVal, now + 0.02);
         gain.gain.exponentialRampToValueAtTime(0.0001, now + duration);
-
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(now);
-        osc.stop(now + duration + 0.02);
-      } catch (e) {}
+        osc.connect(gain); gain.connect(ctx.destination);
+        osc.start(now); osc.stop(now + duration + 0.02);
+      } catch (e) { }
     }
 
-    // Synthesized multi-syllable friendly robotic chuckle via Web Audio API
     function playRoboticLaugh() {
       if (!state.soundEnabled) return;
       try {
@@ -1221,45 +1467,34 @@
           { t: 0.49, f1: 520, f2: 680, d: 0.15 },
           { t: 0.67, f1: 390, f2: 480, d: 0.18 }
         ];
-
         syllables.forEach((s) => {
           const start = ctx.currentTime + s.t;
           const osc1 = ctx.createOscillator();
           const osc2 = ctx.createOscillator();
           const filter = ctx.createBiquadFilter();
           const gain = ctx.createGain();
-
           osc1.type = "triangle";
           osc2.type = "sine";
           osc1.frequency.setValueAtTime(s.f1, start);
           osc1.frequency.exponentialRampToValueAtTime(s.f2, start + s.d * 0.6);
           osc1.frequency.exponentialRampToValueAtTime(s.f1 * 0.85, start + s.d);
-
           osc2.frequency.setValueAtTime(s.f1 * 1.5, start);
           osc2.frequency.exponentialRampToValueAtTime(s.f2 * 1.5, start + s.d);
-
           filter.type = "bandpass";
           filter.frequency.setValueAtTime(950, start);
           filter.Q.setValueAtTime(2.5, start);
-
           gain.gain.setValueAtTime(0.001, start);
           gain.gain.linearRampToValueAtTime(0.11, start + 0.025);
           gain.gain.exponentialRampToValueAtTime(0.0001, start + s.d);
-
-          osc1.connect(filter);
-          osc2.connect(filter);
-          filter.connect(gain);
-          gain.connect(ctx.destination);
-
-          osc1.start(start);
-          osc2.start(start);
-          osc1.stop(start + s.d + 0.02);
-          osc2.stop(start + s.d + 0.02);
+          osc1.connect(filter); osc2.connect(filter);
+          filter.connect(gain); gain.connect(ctx.destination);
+          osc1.start(start); osc2.start(start);
+          osc1.stop(start + s.d + 0.02); osc2.stop(start + s.d + 0.02);
         });
-      } catch (e) {}
+      } catch (e) { }
     }
 
-    // ==================== EXPRESSION & STATUS HELPERS ====================
+    // ==================== EXPRESSIONS (11 total) ====================
     function setStatus(text, color = "sky") {
       statusText.textContent = text;
       const colorMap = {
@@ -1271,34 +1506,64 @@
       statusDot.className = `w-2 h-2 rounded-full ${colorMap[color] || colorMap.sky}`;
     }
 
-    function setEmotion(emotion) {
-      state.emotion = emotion;
-      eyeLeft.classList.remove("wide", "squint", "happy");
-      eyeRight.classList.remove("wide", "squint", "happy");
-      ledMouth.classList.remove("smile", "laugh");
-
-      if (emotion === "happy") {
-        eyeLeft.classList.add("happy");
-        eyeRight.classList.add("happy");
-        ledMouth.classList.add("smile");
-      } else if (emotion === "laughing") {
-        eyeLeft.classList.add("happy");
-        eyeRight.classList.add("happy");
-        ledMouth.classList.add("laugh");
-      } else if (emotion === "surprised") {
-        eyeLeft.classList.add("wide");
-        eyeRight.classList.add("wide");
-      } else if (emotion === "curious") {
-        eyeLeft.classList.add("squint");
-        eyeRight.classList.add("wide");
-        ledMouth.classList.add("smile");
-      } else {
-        ledMouth.classList.add("smile");
+    // showModelBadge: takes (provider, model) and renders a compact badge like
+    //   "Groq · llama-3.3-70b"  or  "Gemini · 2.0-flash"
+    function showModelBadge(provider, modelName) {
+      if (!modelName) {
+        modelBadge.classList.add("hidden");
+        return;
       }
+      const providerLabel = provider === "gemini" ? "Gemini" : "Groq";
+      // Strip common version suffixes to keep it short.
+      const shortName = modelName
+        .replace(/^gemini-/, "")
+        .replace(/^llama-/, "")
+        .replace(/^gemma2-/, "gemma2-")
+        .slice(0, 22);
+      modelBadgeText.innerHTML = `<span style="color:#7dd3fc">${providerLabel}</span> · ${shortName}`;
+      modelBadge.classList.remove("hidden");
+    }
+
+    // Map expression -> (eye classes, mouth class, faceMatrix class)
+    const EXPRESSION_MAP = {
+      neutral: { eyeL: [], eyeR: [], mouth: "smile", fm: "" },
+      happy: { eyeL: ["happy"], eyeR: ["happy"], mouth: "smile", fm: "" },
+      curious: { eyeL: ["squint"], eyeR: ["wide"], mouth: "smile", fm: "" },
+      surprised: { eyeL: ["wide"], eyeR: ["wide"], mouth: "o_shape", fm: "" },
+      laughing: { eyeL: ["happy"], eyeR: ["happy"], mouth: "laugh", fm: "" },
+      thinking: { eyeL: [], eyeR: [], mouth: "flat", fm: "thinking" },
+      confused: { eyeL: [], eyeR: [], mouth: "frown", fm: "confused" },
+      empathetic: { eyeL: [], eyeR: [], mouth: "smile", fm: "empathetic" },
+      wink: { eyeL: [], eyeR: [], mouth: "smirk", fm: "wink" },
+      alert: { eyeL: [], eyeR: [], mouth: "o_shape", fm: "alert" },
+      sleepy: { eyeL: [], eyeR: [], mouth: "frown", fm: "sleepy" }
+    };
+
+    const VALID_EMOTIONS = Object.keys(EXPRESSION_MAP);
+
+    function setEmotion(emotion) {
+      if (!VALID_EMOTIONS.includes(emotion)) emotion = "neutral";
+      state.emotion = emotion;
+      const cfg = EXPRESSION_MAP[emotion];
+
+      // Reset eyes
+      eyeLeft.classList.remove("wide", "squint", "happy", "half_closed", "blink");
+      eyeRight.classList.remove("wide", "squint", "happy", "half_closed", "blink");
+      // Reset mouth
+      ledMouth.classList.remove("smile", "laugh", "flat", "frown", "o_shape", "smirk");
+      // Reset face-matrix modifier classes
+      faceMatrix.classList.remove("thinking", "confused", "empathetic", "wink", "alert", "sleepy");
+
+      // Apply new
+      if (cfg.eyeL.length) eyeLeft.classList.add(...cfg.eyeL);
+      if (cfg.eyeR.length) eyeRight.classList.add(...cfg.eyeR);
+      ledMouth.classList.add(cfg.mouth);
+      if (cfg.fm) faceMatrix.classList.add(cfg.fm);
     }
 
     function triggerBlink() {
-      if (state.emotion === "happy" || state.emotion === "laughing") return;
+      if (state.emotion === "happy" || state.emotion === "laughing" || state.emotion === "sleepy") return;
+      if (performance.now() < state.winkUntil) return;
       state.isBlinking = true;
       eyeLeft.classList.add("blink");
       eyeRight.classList.add("blink");
@@ -1309,78 +1574,72 @@
       }, 115);
     }
 
-    // ==================== ROBOT ACTION CHOREOGRAPHY ====================
-    function triggerAction(actionName, customSubtitle = null) {
-      const validActions = ["track", "wave", "greet", "scan", "spin", "groove", "laugh", "hover", "nod"];
-      const action = validActions.includes(actionName) ? actionName : "track";
+    // ==================== GESTURES (19 total) ====================
+    const VALID_ACTIONS = [
+      "track", "wave", "greet", "scan", "spin", "groove", "laugh", "hover", "nod",
+      "shake_head", "shrug", "tilt_head", "think", "present", "bow",
+      "celebrate", "startle", "facepalm", "idle_breathe"
+    ];
 
+    const ACTION_DURATIONS = {
+      track: 0, wave: 2400, greet: 2200, scan: 2800, spin: 1800, groove: 3600,
+      laugh: 2100, hover: 2000, nod: 1400, shake_head: 1300, shrug: 1500,
+      tilt_head: 1800, think: 2800, present: 2400, bow: 2200, celebrate: 2600,
+      startle: 1500, facepalm: 2200, idle_breathe: 0
+    };
+
+    function triggerAction(actionName, customSubtitle = null) {
+      const action = VALID_ACTIONS.includes(actionName) ? actionName : "track";
       state.currentAction = action;
       state.actionStartTime = performance.now();
+      state.lastInteractionTime = performance.now();
+      state.actionDuration = ACTION_DURATIONS[action] || 0;
 
-      // Update active dock button
       document.querySelectorAll(".dock-btn[data-action]").forEach((btn) => {
         btn.classList.toggle("active", btn.dataset.action === action);
       });
 
       visorFrame.classList.remove("scanning");
 
-      const durations = {
-        track: 0,
-        wave: 2400,
-        greet: 2200,
-        scan: 2800,
-        spin: 1800,
-        groove: 3600,
-        laugh: 2100,
-        hover: 2000,
-        nod: 1400
+      // Map action -> default emotion
+      const actionEmotionMap = {
+        wave: "happy", greet: "happy", scan: "curious", spin: "surprised",
+        groove: "happy", laugh: "laughing", hover: "surprised", nod: "happy",
+        shake_head: "confused", shrug: "confused", tilt_head: "curious",
+        think: "thinking", present: "happy", bow: "neutral",
+        celebrate: "happy", startle: "surprised", facepalm: "confused",
+        idle_breathe: "neutral", track: "neutral"
       };
-      state.actionDuration = durations[action] || 0;
 
-      if (action === "wave") {
-        setEmotion("happy");
-        playServoChirp(360, 620, 0.16);
-        if (customSubtitle) updateSubtitle(customSubtitle);
-      } else if (action === "greet") {
-        setEmotion("happy");
-        playServoChirp(300, 520, 0.18);
-        if (customSubtitle) updateSubtitle(customSubtitle);
-      } else if (action === "scan") {
-        setEmotion("curious");
-        visorFrame.classList.add("scanning");
-        playServoChirp(520, 880, 0.22);
-        if (customSubtitle) updateSubtitle(customSubtitle);
-      } else if (action === "spin") {
-        setEmotion("surprised");
-        playServoChirp(280, 760, 0.25);
-        if (customSubtitle) updateSubtitle(customSubtitle);
-      } else if (action === "groove") {
-        setEmotion("happy");
-        playServoChirp(340, 580, 0.15);
-        if (customSubtitle) updateSubtitle(customSubtitle);
-      } else if (action === "laugh") {
-        setEmotion("laughing");
-        playRoboticLaugh();
-        if (customSubtitle) updateSubtitle(customSubtitle);
-      } else if (action === "hover") {
-        setEmotion("surprised");
-        playServoChirp(240, 690, 0.22);
-        if (customSubtitle) updateSubtitle(customSubtitle);
-      } else if (action === "nod") {
-        setEmotion("happy");
-        playServoChirp(380, 480, 0.1);
-      } else {
-        setEmotion("neutral");
+      setEmotion(actionEmotionMap[action] || "neutral");
+
+      // Sound per action
+      const soundMap = {
+        wave: [360, 620, 0.16], greet: [300, 520, 0.18], scan: [520, 880, 0.22],
+        spin: [280, 760, 0.25], groove: [340, 580, 0.15], hover: [240, 690, 0.22],
+        nod: [380, 480, 0.1], shake_head: [420, 360, 0.14], shrug: [320, 540, 0.13],
+        tilt_head: [340, 460, 0.12], think: [280, 420, 0.18], present: [400, 700, 0.2],
+        bow: [260, 380, 0.22], celebrate: [440, 880, 0.24], startle: [180, 600, 0.18],
+        facepalm: [380, 240, 0.16]
+      };
+      if (soundMap[action]) {
+        const [f1, f2, d] = soundMap[action];
+        playServoChirp(f1, f2, d);
       }
+      if (action === "laugh") playRoboticLaugh();
+
+      // Scan visual
+      if (action === "scan") visorFrame.classList.add("scanning");
+
+      if (customSubtitle) updateSubtitle(customSubtitle);
     }
 
     function updateSubtitle(text) {
       aiResponseText.textContent = text;
     }
 
-    // ==================== ENGLISH SPEECH SYNTHESIS & LIP SYNC ====================
+    // ==================== STREAMING TTS (sentence-chunked) ====================
     let preferredEnglishVoice = null;
-
     function loadEnglishVoices() {
       if (!("speechSynthesis" in window)) return;
       const voices = window.speechSynthesis.getVoices();
@@ -1391,96 +1650,587 @@
         voices.find((v) => v.lang.startsWith("en")) ||
         voices[0];
     }
-
     if ("speechSynthesis" in window) {
       loadEnglishVoices();
       window.speechSynthesis.onvoiceschanged = loadEnglishVoices;
     }
 
-    function speakEnglish(text) {
-      updateSubtitle(text);
-      if (!state.soundEnabled || !("speechSynthesis" in window)) {
-        // Simulate brief visual lip movement even when muted
+    function resetMouthBars() {
+      mouthBars.forEach((bar) => { bar.style.height = ""; });
+    }
+
+    // Speak a single sentence chunk; queue via speechSynthesis
+    function speakChunk(text) {
+      if (!state.soundEnabled) {
+        // Visual-only: pulse mouth for duration
         state.isSpeaking = true;
+        const dur = Math.min(1800, Math.max(500, text.length * 45));
         setTimeout(() => {
-          state.isSpeaking = false;
-          resetMouthBars();
-        }, Math.min(3500, Math.max(1200, text.length * 45)));
+          if (!state.speechQueueInFlight) {
+            state.isSpeaking = false;
+            resetMouthBars();
+          }
+        }, dur);
         return;
       }
-
       try {
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = "en-US";
-        if (preferredEnglishVoice) utterance.voice = preferredEnglishVoice;
-        utterance.rate = 1.03;
-        utterance.pitch = 1.06;
-
-        utterance.onstart = () => {
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = "en-US";
+        if (preferredEnglishVoice) u.voice = preferredEnglishVoice;
+        u.rate = 1.05;
+        u.pitch = 1.06;
+        u.onstart = () => {
           state.isSpeaking = true;
-          setStatus("Speaking // English", "sky");
+          state.speechQueueInFlight = (state.speechQueueInFlight || 0) + 1;
+          setStatus("Speaking", "sky");
         };
-
-        utterance.onboundary = () => {
-          state.speechIntensity = 1.0;
+        u.onboundary = () => { state.speechIntensity = 1.0; };
+        u.onend = () => {
+          state.speechQueueInFlight = Math.max(0, (state.speechQueueInFlight || 0) - 1);
+          if (state.speechQueueInFlight === 0) {
+            state.isSpeaking = false;
+            state.speechIntensity = 0;
+            resetMouthBars();
+            setStatus(state.camActive ? "Head Cam Active" : "Ready", state.camActive ? "emerald" : "sky");
+          }
         };
-
-        utterance.onend = () => {
-          state.isSpeaking = false;
-          state.speechIntensity = 0;
-          resetMouthBars();
-          setStatus(state.camActive ? "Head Cam Active" : "Ready // English AI", state.camActive ? "emerald" : "sky");
+        u.onerror = () => {
+          state.speechQueueInFlight = Math.max(0, (state.speechQueueInFlight || 0) - 1);
+          if (state.speechQueueInFlight === 0) {
+            state.isSpeaking = false;
+            resetMouthBars();
+          }
         };
+        window.speechSynthesis.speak(u);
+      } catch (e) { }
+    }
 
-        utterance.onerror = () => {
-          state.isSpeaking = false;
-          resetMouthBars();
-        };
+    // Stream-queue: split incoming reply text into sentences and speak them as they complete
+    const sentenceBuffer = { text: "" };
 
-        window.speechSynthesis.speak(utterance);
-      } catch (e) {
-        state.isSpeaking = false;
+    function feedReplyChunk(chunk) {
+      sentenceBuffer.text += chunk;
+      updateSubtitle(sentenceBuffer.text.trim());
+
+      // Pull out complete sentences
+      let idx;
+      while ((idx = findSentenceEnd(sentenceBuffer.text)) !== -1) {
+        const sentence = sentenceBuffer.text.slice(0, idx + 1).trim();
+        sentenceBuffer.text = sentenceBuffer.text.slice(idx + 1);
+        if (sentence) speakChunk(sentence);
       }
     }
 
-    function resetMouthBars() {
-      mouthBars.forEach((bar) => {
-        bar.style.height = "";
-      });
+    function findSentenceEnd(s) {
+      // Find first . ! ? followed by space or end, ignoring decimals like 3.14
+      for (let i = 0; i < s.length; i++) {
+        const c = s[i];
+        if (c === "." || c === "!" || c === "?") {
+          // Skip if digit on both sides (decimal)
+          if (c === "." && i > 0 && /\d/.test(s[i - 1]) && i + 1 < s.length && /\d/.test(s[i + 1])) continue;
+          return i;
+        }
+      }
+      return -1;
     }
 
-    // ==================== GEMINI AI CONVERSATIONAL BRAIN ====================
-    const SYSTEM_PROMPT = `You are AETHER-01, an advanced, friendly, witty 3D brushed-silver bipedal humanoid robot inside a sleek black studio.
-Rules:
-1. Respond ONLY in crisp, natural English.
-2. Keep replies concise (1 to 3 short sentences) so they sound great spoken aloud.
-3. Choose the most expressive physical gesture for your response from: "wave", "greet", "scan", "spin", "groove", "laugh", "hover", "nod", "track".
-4. Choose your LED visor expression from: "neutral", "happy", "curious", "surprised", "laughing".`;
+    function flushReplyBuffer() {
+      const rest = sentenceBuffer.text.trim();
+      if (rest) speakChunk(rest);
+      sentenceBuffer.text = "";
+    }
 
-    async function callGeminiWithRetry(payload, maxRetries = 3) {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${apiKey}`;
-      let delay = 800;
-      for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    function speakEnglish(text) {
+      updateSubtitle(text);
+      sentenceBuffer.text = "";
+      // Split into sentences for natural TTS
+      let rest = text;
+      let idx;
+      while ((idx = findSentenceEnd(rest)) !== -1) {
+        const sentence = rest.slice(0, idx + 1).trim();
+        rest = rest.slice(idx + 1);
+        if (sentence) speakChunk(sentence);
+      }
+      if (rest.trim()) speakChunk(rest.trim());
+    }
+
+    // ==================== GROQ + GEMINI STREAMING CLIENTS ====================
+
+    // Build OpenAI-compatible messages array for Groq (text only).
+    function buildGroqMessages(userText) {
+      const messages = [{ role: "system", content: SYSTEM_PROMPT }];
+      const recent = state.conversationHistory.slice(-4);
+      recent.forEach((turn) => {
+        messages.push({ role: turn.role === "model" ? "assistant" : "user", content: turn.content });
+      });
+      messages.push({ role: "user", content: userText });
+      return messages;
+    }
+
+    // Build Gemini-format contents array.
+    // For vision queries, pass imageBase64 + mimeType; for text-only, leave them null.
+    function buildGeminiContents(userText, imageBase64 = null, imageMimeType = "image/jpeg") {
+      const contents = [];
+      // Gemini does NOT accept a "system" role in contents; systemInstruction is separate.
+      const recent = state.conversationHistory.slice(-4);
+      recent.forEach((turn) => {
+        contents.push({
+          role: turn.role === "model" ? "model" : "user",
+          parts: [{ text: turn.content }]
+        });
+      });
+      const parts = [{ text: userText || "Look at this webcam frame and respond in character as AETHER-01." }];
+      if (imageBase64) {
+        parts.push({ inlineData: { mimeType: imageMimeType, data: imageBase64 } });
+      }
+      contents.push({ role: "user", parts });
+      return contents;
+    }
+
+    function showModelError(message) {
+      updateSubtitle(message);
+      setStatus("API Error", "rose");
+    }
+
+    // Hard reset of TTS queue state — call this on every new user input so a
+    // previous stuck/errored speech doesn't block the new reply.
+    function cancelSpeechAndReset() {
+      try {
+        if ("speechSynthesis" in window) {
+          window.speechSynthesis.cancel();
+        }
+      } catch (e) { }
+      state.isSpeaking = false;
+      state.speechIntensity = 0;
+      state.speechQueueInFlight = 0;
+      sentenceBuffer.text = "";
+      resetMouthBars();
+    }
+
+    // Friendly explanation of HTTP status codes — provider-agnostic.
+    function explainHttpStatus(status) {
+      if (status === 400) return "400 Bad Request — request body or parameter invalid.";
+      if (status === 401) return "401 Unauthorized — API key is missing, wrong, or revoked.";
+      if (status === 402) return "402 Payment Required — free quota exhausted.";
+      if (status === 403) return "403 Forbidden — key lacks access to this model.";
+      if (status === 404) return `404 Not Found — model ID is wrong or deprecated.`;
+      if (status === 429) return "429 Rate Limited — free-tier per-minute or per-day cap hit. Wait 60s and try again.";
+      if (status === 502 || status === 503) return `${status} Upstream Down — provider is briefly down. Retry in a moment.`;
+      if (status >= 500) return `${status} Server Error — provider is having issues. Retry shortly.`;
+      return `HTTP ${status}`;
+    }
+
+    // Pick model list: Groq for chat, Gemini for vision.
+    function pickGroqModelList() {
+      const preferred = state.activeChatModel;
+      return [preferred, ...GROQ_MODELS.filter((m) => m !== preferred)];
+    }
+    function pickGeminiModelList() {
+      const preferred = state.activeVisionModel;
+      return [preferred, ...GEMINI_MODELS.filter((m) => m !== preferred)];
+    }
+
+    // Shared final-error handler used by both streamGroq and streamGemini.
+    function showAllModelsFailed(providerLabel, lastError, lastHttpStatus) {
+      cancelSpeechAndReset();
+      const reason = lastError || (lastHttpStatus ? explainHttpStatus(lastHttpStatus) : "network error");
+      const isRateLimit = lastHttpStatus === 429;
+      const isAuthIssue = lastHttpStatus === 401 || lastHttpStatus === 403;
+      let userMessage;
+      if (isAuthIssue) {
+        userMessage = `My ${providerLabel} authentication circuits are misaligned. ${reason} Check your ${providerLabel} API key in the script tag and refresh.`;
+        showModelError(`AUTH ISSUE (${providerLabel}): ${reason}`);
+        setStatus("Bad API Key", "rose");
+        triggerAction("shake_head");
+      } else if (isRateLimit) {
+        userMessage = `My ${providerLabel} free-tier quota is temporarily saturated. ${reason} Please wait about 60 seconds and try again.`;
+        showModelError(`RATE LIMITED (${providerLabel}) — wait 60s`);
+        setStatus("Rate Limited", "amber");
+        triggerAction("idle_breathe");
+      } else {
+        userMessage = `All my ${providerLabel} neural pathways are reporting static. ${reason} Try again in a moment.`;
+        showModelError(`ALL ${providerLabel.toUpperCase()} MODELS FAILED: ${reason}`);
+        setStatus("Model Error", "rose");
+        triggerAction("shrug");
+      }
+      speakEnglish(userMessage);
+    }
+
+    /**
+     * streamGroq — text chat via Groq's OpenAI-compatible endpoint.
+     * Parses ACTION/EMOTION/REPLY prefix live; feeds reply chunks to streaming TTS.
+     * Returns the model's reply text on success, or null on failure.
+     */
+    async function streamGroq(userText) {
+      if (!GROQ_API_KEY) {
+        showModelError("Missing Groq API key. Edit GROQ_API_KEY in the script tag.");
+        return null;
+      }
+      cancelSpeechAndReset();
+      state.activeProvider = "groq";
+
+      const messages = buildGroqMessages(userText);
+      const modelList = pickGroqModelList();
+      let lastError = null;
+      let lastHttpStatus = 0;
+      const streamStartTime = performance.now();
+
+      for (let attemptIdx = 0; attemptIdx < modelList.length; attemptIdx++) {
+        const model = modelList[attemptIdx];
+        const controller = new AbortController();
+        let abortTimerId = setTimeout(() => controller.abort(), MODEL_FETCH_TIMEOUT_MS);
+        let chunkWatchdogId = null;
+        const resetChunkWatchdog = () => {
+          if (chunkWatchdogId) clearTimeout(chunkWatchdogId);
+          chunkWatchdogId = setTimeout(() => controller.abort(), STREAM_CHUNK_TIMEOUT_MS);
+        };
+        const cleanupTimers = () => {
+          if (abortTimerId) clearTimeout(abortTimerId);
+          if (chunkWatchdogId) clearTimeout(chunkWatchdogId);
+          abortTimerId = null;
+          chunkWatchdogId = null;
+        };
+
         try {
+          const elapsedSec = ((performance.now() - streamStartTime) / 1000).toFixed(1);
+          setStatus(`Thinking ${elapsedSec}s (${attemptIdx + 1}/${modelList.length})...`, "amber");
+          setEmotion("thinking");
+          showModelBadge("groq", model);
+
+          const response = await fetch(GROQ_URL, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              "Authorization": `Bearer ${GROQ_API_KEY}`
+            },
+            body: JSON.stringify({
+              model: model,
+              messages: messages,
+              stream: true,
+              temperature: 0.7,
+              max_completion_tokens: 250
+            }),
+            signal: controller.signal
+          });
+          resetChunkWatchdog();
+
+          if (!response.ok) {
+            lastHttpStatus = response.status;
+            // Read the actual error body so we know what Groq is complaining about.
+            // Groq returns JSON like {"error":{"message":"...","type":"..."}}
+            let rawBody = "";
+            try {
+              rawBody = await response.text();
+              const parsed = JSON.parse(rawBody);
+              const apiMsg = parsed?.error?.message || parsed?.error || parsed?.message || rawBody.slice(0, 200);
+              const errLine = `${model}: ${explainHttpStatus(response.status)} — ${typeof apiMsg === "string" ? apiMsg : JSON.stringify(apiMsg)}`;
+              lastError = lastError ? `${lastError} | ${errLine}` : errLine;
+            } catch (e) {
+              const errLine = `${model}: ${explainHttpStatus(response.status)} — ${rawBody.slice(0, 200) || "no body"}`;
+              lastError = lastError ? `${lastError} | ${errLine}` : errLine;
+            }
+            cleanupTimers();
+            if (response.status === 401 || response.status === 403) break;
+            continue;
+          }
+
+          state.activeChatModel = model;
+
+          // Parse SSE stream — Groq emits standard OpenAI-style chunks
+          // data: {"choices":[{"delta":{"content":"..."}}]}
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
+          let buffer = "";
+          let fullText = "";
+          let actionParsed = null;
+          let emotionParsed = null;
+          let replyStarted = false;
+          let preReplyBuffer = "";
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            resetChunkWatchdog();
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split("\n");
+            buffer = lines.pop();
+            for (const line of lines) {
+              const trimmed = line.trim();
+              if (!trimmed || !trimmed.startsWith("data:")) continue;
+              const payload = trimmed.slice(5).trim();
+              if (payload === "[DONE]") continue;
+              try {
+                const json = JSON.parse(payload);
+                const delta = json.choices?.[0]?.delta?.content || "";
+                if (!delta) continue;
+                fullText += delta;
+                if (!replyStarted) {
+                  preReplyBuffer += delta;
+                  if (actionParsed === null) {
+                    const m = preReplyBuffer.match(/ACTION:\s*(\w+)/i);
+                    if (m) {
+                      actionParsed = m[1].toLowerCase();
+                      if (VALID_ACTIONS.includes(actionParsed)) triggerAction(actionParsed);
+                    }
+                  }
+                  if (emotionParsed === null) {
+                    const m = preReplyBuffer.match(/EMOTION:\s*(\w+)/i);
+                    if (m) {
+                      emotionParsed = m[1].toLowerCase();
+                      if (VALID_EMOTIONS.includes(emotionParsed)) setEmotion(emotionParsed);
+                    }
+                  }
+                  const replyIdx = preReplyBuffer.indexOf("REPLY:");
+                  if (replyIdx !== -1) {
+                    replyStarted = true;
+                    const restOfLine = preReplyBuffer.slice(replyIdx + 6);
+                    if (restOfLine) feedReplyChunk(restOfLine);
+                  }
+                } else {
+                  feedReplyChunk(delta);
+                }
+              } catch (e) { }
+            }
+          }
+
+          cleanupTimers();
+
+          if (!fullText.trim()) {
+            lastError = `Empty response from Groq ${model}`;
+            cancelSpeechAndReset();
+            continue;
+          }
+
+          flushReplyBuffer();
+          if (!replyStarted) {
+            updateSubtitle(fullText.trim());
+            speakEnglish(fullText.trim());
+          }
+
+          state.conversationHistory.push({ role: "user", content: userText });
+          state.conversationHistory.push({ role: "model", content: fullText.trim() });
+          if (state.conversationHistory.length > 16) {
+            state.conversationHistory = state.conversationHistory.slice(-16);
+          }
+
+          setStatus(state.camActive ? "Head Cam Active" : "Ready", state.camActive ? "emerald" : "sky");
+          return { action: actionParsed, emotion: emotionParsed, reply: fullText };
+
+        } catch (err) {
+          cleanupTimers();
+          const isAbort = err.name === "AbortError" || /abort/i.test(err.message || "");
+          if (isAbort) {
+            lastError = `Timeout on Groq ${model}`;
+            cancelSpeechAndReset();
+            continue;
+          }
+          lastError = err.message || "network error";
+          cancelSpeechAndReset();
+          continue;
+        }
+      }
+
+      // Groq failed entirely — try Gemini as last-resort text fallback (if key present)
+      if (GEMINI_API_KEY) {
+        setStatus("Falling back to Gemini...", "amber");
+        const gemResult = await streamGemini(userText, null);
+        if (gemResult) return gemResult;
+      }
+
+      showAllModelsFailed("Groq", lastError, lastHttpStatus);
+      return null;
+    }
+
+    /**
+     * streamGemini — vision OR text via Gemini's streamGenerateContent endpoint.
+     * For vision: pass imageBase64 + imageMimeType.
+     * For text-only: pass nulls.
+     * Returns the model's reply text on success, or null on failure.
+     */
+    async function streamGemini(userText, imageBase64 = null, imageMimeType = "image/jpeg") {
+      if (!GEMINI_API_KEY) {
+        showModelError("Missing Gemini API key. Edit GEMINI_API_KEY in the script tag.");
+        return null;
+      }
+      cancelSpeechAndReset();
+      state.activeProvider = "gemini";
+
+      const contents = buildGeminiContents(userText, imageBase64, imageMimeType);
+      const modelList = pickGeminiModelList();
+      let lastError = null;
+      let lastHttpStatus = 0;
+      const streamStartTime = performance.now();
+
+      for (let attemptIdx = 0; attemptIdx < modelList.length; attemptIdx++) {
+        const model = modelList[attemptIdx];
+        const controller = new AbortController();
+        let abortTimerId = setTimeout(() => controller.abort(), MODEL_FETCH_TIMEOUT_MS);
+        let chunkWatchdogId = null;
+        const resetChunkWatchdog = () => {
+          if (chunkWatchdogId) clearTimeout(chunkWatchdogId);
+          chunkWatchdogId = setTimeout(() => controller.abort(), STREAM_CHUNK_TIMEOUT_MS);
+        };
+        const cleanupTimers = () => {
+          if (abortTimerId) clearTimeout(abortTimerId);
+          if (chunkWatchdogId) clearTimeout(chunkWatchdogId);
+          abortTimerId = null;
+          chunkWatchdogId = null;
+        };
+
+        try {
+          const elapsedSec = ((performance.now() - streamStartTime) / 1000).toFixed(1);
+          const visionTag = imageBase64 ? " · vision" : "";
+          setStatus(`Thinking ${elapsedSec}s (${attemptIdx + 1}/${modelList.length})${visionTag}...`, "amber");
+          setEmotion("thinking");
+          showModelBadge("gemini", model);
+
+          const url = `${GEMINI_URL_BASE}/${model}:streamGenerateContent?alt=sse&key=${GEMINI_API_KEY}`;
           const response = await fetch(url, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload)
+            body: JSON.stringify({
+              contents: contents,
+              systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+              generationConfig: {
+                temperature: 0.7,
+                maxOutputTokens: 250,
+                candidateCount: 1
+              }
+            }),
+            signal: controller.signal
           });
-          if (!response.ok) throw new Error(`HTTP ${response.status}`);
-          return await response.json();
+          resetChunkWatchdog();
+
+          if (!response.ok) {
+            lastHttpStatus = response.status;
+            // Read the actual error body — Gemini returns JSON like
+            // {"error":{"code":400,"message":"...","status":"INVALID_ARGUMENT"}}
+            let rawBody = "";
+            try {
+              rawBody = await response.text();
+              const parsed = JSON.parse(rawBody);
+              const apiMsg = parsed?.error?.message || parsed?.error || parsed?.message || rawBody.slice(0, 200);
+              const errLine = `${model}: ${explainHttpStatus(response.status)} — ${typeof apiMsg === "string" ? apiMsg : JSON.stringify(apiMsg)}`;
+              lastError = lastError ? `${lastError} | ${errLine}` : errLine;
+            } catch (e) {
+              const errLine = `${model}: ${explainHttpStatus(response.status)} — ${rawBody.slice(0, 200) || "no body"}`;
+              lastError = lastError ? `${lastError} | ${errLine}` : errLine;
+            }
+            cleanupTimers();
+            if (response.status === 401 || response.status === 403) break;
+            continue;
+          }
+
+          state.activeVisionModel = model;
+
+          // Parse SSE stream — Gemini emits chunks like:
+          // data: {"candidates":[{"content":{"parts":[{"text":"..."}],"role":"model"}}]}
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
+          let buffer = "";
+          let fullText = "";
+          let actionParsed = null;
+          let emotionParsed = null;
+          let replyStarted = false;
+          let preReplyBuffer = "";
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            resetChunkWatchdog();
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split("\n");
+            buffer = lines.pop();
+            for (const line of lines) {
+              const trimmed = line.trim();
+              if (!trimmed || !trimmed.startsWith("data:")) continue;
+              const payload = trimmed.slice(5).trim();
+              if (payload === "[DONE]") continue;
+              try {
+                const json = JSON.parse(payload);
+                // Gemini: concatenate text from ALL parts in candidate[0].content
+                const parts = json.candidates?.[0]?.content?.parts || [];
+                let delta = "";
+                for (const p of parts) {
+                  if (typeof p.text === "string") delta += p.text;
+                }
+                if (!delta) continue;
+                fullText += delta;
+                if (!replyStarted) {
+                  preReplyBuffer += delta;
+                  if (actionParsed === null) {
+                    const m = preReplyBuffer.match(/ACTION:\s*(\w+)/i);
+                    if (m) {
+                      actionParsed = m[1].toLowerCase();
+                      if (VALID_ACTIONS.includes(actionParsed)) triggerAction(actionParsed);
+                    }
+                  }
+                  if (emotionParsed === null) {
+                    const m = preReplyBuffer.match(/EMOTION:\s*(\w+)/i);
+                    if (m) {
+                      emotionParsed = m[1].toLowerCase();
+                      if (VALID_EMOTIONS.includes(emotionParsed)) setEmotion(emotionParsed);
+                    }
+                  }
+                  const replyIdx = preReplyBuffer.indexOf("REPLY:");
+                  if (replyIdx !== -1) {
+                    replyStarted = true;
+                    const restOfLine = preReplyBuffer.slice(replyIdx + 6);
+                    if (restOfLine) feedReplyChunk(restOfLine);
+                  }
+                } else {
+                  feedReplyChunk(delta);
+                }
+              } catch (e) { }
+            }
+          }
+
+          cleanupTimers();
+
+          if (!fullText.trim()) {
+            lastError = `Empty response from Gemini ${model}`;
+            cancelSpeechAndReset();
+            continue;
+          }
+
+          flushReplyBuffer();
+          if (!replyStarted) {
+            updateSubtitle(fullText.trim());
+            speakEnglish(fullText.trim());
+          }
+
+          state.conversationHistory.push({ role: "user", content: userText || "(vision query)" });
+          state.conversationHistory.push({ role: "model", content: fullText.trim() });
+          if (state.conversationHistory.length > 16) {
+            state.conversationHistory = state.conversationHistory.slice(-16);
+          }
+
+          setStatus(state.camActive ? "Head Cam Active" : "Ready", state.camActive ? "emerald" : "sky");
+          return { action: actionParsed, emotion: emotionParsed, reply: fullText };
+
         } catch (err) {
-          if (attempt === maxRetries) throw err;
-          await new Promise((r) => setTimeout(r, delay));
-          delay *= 2;
+          cleanupTimers();
+          const isAbort = err.name === "AbortError" || /abort/i.test(err.message || "");
+          if (isAbort) {
+            lastError = `Timeout on Gemini ${model}`;
+            cancelSpeechAndReset();
+            continue;
+          }
+          lastError = err.message || "network error";
+          cancelSpeechAndReset();
+          continue;
         }
       }
+
+      showAllModelsFailed("Gemini", lastError, lastHttpStatus);
+      return null;
     }
 
-    // Local fast-path for instant zero-latency physical commands
+    // ==================== LOCAL FAST PATH ====================
     function handleLocalFastPath(rawText) {
       const lower = rawText.toLowerCase().trim();
+      // Interrupt any in-flight TTS so the fast-path reply starts immediately.
+      cancelSpeechAndReset();
       if (/^(hi|hello|hey|greetings|good morning|good evening)\b/.test(lower) && lower.split(" ").length <= 4) {
         triggerAction("wave");
         speakEnglish("Hello there! Systems online and tracking you cleanly. How can I help?");
@@ -1516,14 +2266,24 @@ Rules:
         speakEnglish("Haha! My humor circuits are fully charged today.");
         return true;
       }
+      if (/\b(think|ponder|consider)\b/.test(lower) && lower.split(" ").length <= 5) {
+        triggerAction("think");
+        speakEnglish("Engaging deep-thought processors. Processing your query.");
+        return true;
+      }
+      if (/\b(thank you|thanks|appreciate)\b/.test(lower)) {
+        triggerAction("bow");
+        speakEnglish("You are most welcome. Always a pleasure.");
+        return true;
+      }
       return false;
     }
 
+    // ==================== MESSAGE DISPATCH ====================
     async function processUserEnglishMessage(userText, imageBase64 = null) {
       const cleaned = (userText || "").trim();
       if (!cleaned && !imageBase64) return;
 
-      // Check vision query
       const isVisionQuery =
         imageBase64 !== null ||
         /\b(what do you see|how do i look|can you see me|look at me|what am i holding|who am i|describe me)\b/i.test(cleaned);
@@ -1535,99 +2295,70 @@ Rules:
 
       if (handleLocalFastPath(cleaned)) return;
 
-      setStatus("Thinking...", "amber");
-      setEmotion("curious");
-
-      state.conversationHistory.push({
-        role: "user",
-        parts: [{ text: cleaned }]
-      });
-      if (state.conversationHistory.length > 12) {
-        state.conversationHistory = state.conversationHistory.slice(-12);
-      }
-
-      try {
-        const payload = {
-          contents: state.conversationHistory,
-          systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
-          generationConfig: {
-            responseMimeType: "application/json",
-            responseSchema: {
-              type: "OBJECT",
-              properties: {
-                reply: { type: "STRING" },
-                action: {
-                  type: "STRING",
-                  enum: ["wave", "greet", "scan", "spin", "groove", "laugh", "hover", "nod", "track"]
-                },
-                emotion: {
-                  type: "STRING",
-                  enum: ["neutral", "happy", "curious", "surprised", "laughing"]
-                }
-              },
-              required: ["reply", "action", "emotion"]
-            }
-          }
-        };
-
-        const data = await callGeminiWithRetry(payload);
-        const rawJson = data?.candidates?.[0]?.content?.parts?.[0]?.text;
-        const parsed = JSON.parse(rawJson);
-
-        state.conversationHistory.push({
-          role: "model",
-          parts: [{ text: rawJson }]
-        });
-
-        triggerAction(parsed.action || "nod");
-        setEmotion(parsed.emotion || "happy");
-        speakEnglish(parsed.reply || "I am right here with you.");
-      } catch (err) {
-        setStatus("Ready // English AI", "sky");
-        triggerAction("nod");
-        speakEnglish("My neural link hit a brief static spike, but my local systems are ready. Try asking me again!");
-      }
+      // streamGroq will fall back to streamGemini automatically if Groq is unreachable.
+      await streamGroq(cleaned);
     }
 
-    // ==================== DUAL-ENGINE ENGLISH VOICE RECOGNITION ====================
+    // ==================== VOICE RECOGNITION (VAD + interim) ====================
     async function toggleVoiceRecognition() {
       ensureAudioCtx();
-      if (state.isListening) {
-        stopVoiceRecognition();
-      } else {
-        await startVoiceRecognition();
-      }
+      if (state.isListening) stopVoiceRecognition();
+      else await startVoiceRecognition();
     }
 
     async function startVoiceRecognition() {
       if (state.isListening) return;
       state.isListening = true;
       state.finalTranscriptBuffer = "";
-      state.speechFallbackTriggered = false;
+      state.interimTranscript = "";
+      state.lastVoiceActivityTime = performance.now();
       state.audioChunks = [];
+
+      // Detect mobile / no Web Speech API support so we can adapt.
+      const hasSpeechAPI = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+      const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      state.useMobileMode = !hasSpeechAPI || isMobile;
 
       btnSpeak.classList.add("recording");
       speakBtnLabel.textContent = "Listening...";
       voiceHud.classList.remove("hidden");
-      liveTranscriptText.textContent = "Listening in English...";
-      setStatus("Listening (en-US)...", "rose");
+      liveTranscriptText.textContent = state.useMobileMode
+        ? "Listening (mobile mode — release to send)..."
+        : "Listening...";
+      setStatus(state.useMobileMode ? "Listening (mobile)..." : "Listening...", "rose");
       setEmotion("curious");
 
-      // 1. Start Microphone Stream for Real-Time Level Meter & MediaRecorder Fallback
       try {
         state.micStream = await navigator.mediaDevices.getUserMedia({
-          audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true }
+          audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 }
         });
-
         const ctx = ensureAudioCtx();
         const source = ctx.createMediaStreamSource(state.micStream);
         state.micAnalyser = ctx.createAnalyser();
-        state.micAnalyser.fftSize = 64;
+        state.micAnalyser.fftSize = 512;
         source.connect(state.micAnalyser);
         animateMicLevel();
 
         if (window.MediaRecorder) {
-          state.mediaRecorder = new MediaRecorder(state.micStream);
+          // Pick a mimeType Gemini supports. Mobile Chrome often defaults to
+          // audio/mp4 or audio/ogg; desktop Chrome defaults to audio/webm.
+          // Gemini accepts: wav, mp3, aac, ogg, opus, webm, flac, m4a, 3gp.
+          const candidateMimes = [
+            "audio/webm;codecs=opus",
+            "audio/webm",
+            "audio/ogg;codecs=opus",
+            "audio/mp4",
+            "audio/m4a"
+          ];
+          let chosenMime = "";
+          for (const m of candidateMimes) {
+            if (MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(m)) {
+              chosenMime = m; break;
+            }
+          }
+          state.mediaRecorder = chosenMime
+            ? new MediaRecorder(state.micStream, { mimeType: chosenMime })
+            : new MediaRecorder(state.micStream);
           state.mediaRecorder.ondataavailable = (e) => {
             if (e.data && e.data.size > 0) state.audioChunks.push(e.data);
           };
@@ -1640,15 +2371,16 @@ Rules:
         return;
       }
 
-      // 2. Primary Engine: Web Speech API (en-US)
       const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-      if (SpeechRecognition) {
+      // Skip Web Speech API entirely on mobile or where unsupported — it either
+      // doesn't exist (Android Chrome) or silently fails. Rely on MediaRecorder + Gemini.
+      if (SpeechRecognition && !state.useMobileMode) {
         try {
           const recognition = new SpeechRecognition();
           state.recognition = recognition;
           recognition.lang = "en-US";
           recognition.interimResults = true;
-          recognition.continuous = false;
+          recognition.continuous = true;
           recognition.maxAlternatives = 1;
 
           recognition.onresult = (event) => {
@@ -1656,47 +2388,91 @@ Rules:
             let finalText = "";
             for (let i = event.resultIndex; i < event.results.length; i++) {
               const transcript = event.results[i][0].transcript;
-              if (event.results[i].isFinal) {
-                finalText += transcript;
-              } else {
-                interim += transcript;
-              }
+              if (event.results[i].isFinal) finalText += transcript;
+              else interim += transcript;
             }
-            if (finalText) state.finalTranscriptBuffer += " " + finalText;
+            if (finalText) {
+              state.finalTranscriptBuffer += " " + finalText;
+              state.lastVoiceActivityTime = performance.now();
+            }
+            if (interim) {
+              state.interimTranscript = interim;
+              state.lastVoiceActivityTime = performance.now();
+              scheduleInterimPreflight();
+            }
             const display = (state.finalTranscriptBuffer + " " + interim).trim();
-            if (display) {
-              liveTranscriptText.textContent = display;
-            }
+            if (display) liveTranscriptText.textContent = display;
           };
 
           recognition.onerror = (event) => {
-            // If browser speech service fails (network/iframe), seamlessly fall back to Gemini audio transcription
-            if (event.error !== "aborted") {
-              state.speechFallbackTriggered = true;
+            if (event.error === "no-speech" || event.error === "aborted") return;
+            if (event.error === "not-allowed" || event.error === "service-not-allowed") {
+              liveTranscriptText.textContent = "Browser speech blocked; will transcribe via Gemini on stop.";
             }
           };
 
           recognition.onend = () => {
             if (state.isListening) {
-              stopVoiceRecognition();
+              try { recognition.start(); } catch (e) { }
             }
           };
 
           recognition.start();
         } catch (e) {
-          state.speechFallbackTriggered = true;
+          // Will rely on VAD + MediaRecorder fallback
         }
       } else {
-        state.speechFallbackTriggered = true;
+        // Mobile/no-Speech-API mode — show hint and lean on VAD + Gemini transcription.
+        liveTranscriptText.textContent = "Listening (audio mode) — speak, then pause...";
       }
+
+      // VAD silence auto-stop.
+      // Mobile mode: shorter silence (900ms — we don't get interim results so wait a bit
+      //   longer to make sure the user finished their sentence) + shorter max (6s).
+      // Desktop mode: 700ms silence, 8s max.
+      const SILENCE_MS = state.useMobileMode ? 900 : 700;
+      const MAX_LISTEN_MS = state.useMobileMode ? 6000 : 8000;
+      const listenStartedAt = performance.now();
+      state.vadSilenceTimer = setInterval(() => {
+        if (!state.isListening) return;
+        const now = performance.now();
+        const silentFor = now - state.lastVoiceActivityTime;
+        const totalListen = now - listenStartedAt;
+        const hasTranscript = state.finalTranscriptBuffer || state.interimTranscript;
+        // Stop on: silence + we have text  OR  hard max-duration cap
+        // In mobile mode we always allow stop on max-duration even without transcript,
+        // because we won't get one — the audio will go to Gemini.
+        const stopOnSilence = state.useMobileMode
+          ? silentFor > SILENCE_MS
+          : (silentFor > SILENCE_MS && hasTranscript);
+        if (stopOnSilence || totalListen > MAX_LISTEN_MS) {
+          stopVoiceRecognition();
+        }
+      }, 150);
+    }
+
+    function scheduleInterimPreflight() {
+      // Debounced: if no new interim for 700ms and we have substantive text, fire early
+      if (state.interimProcessTimer) clearTimeout(state.interimProcessTimer);
+      state.interimProcessTimer = setTimeout(() => {
+        if (state.preflightInFlight) return;
+        // Don't preflight; just keep the buffer warm. Actual processing happens on stop.
+      }, 700);
     }
 
     function animateMicLevel() {
       if (!state.isListening || !state.micAnalyser) return;
       const data = new Uint8Array(state.micAnalyser.frequencyBinCount);
       state.micAnalyser.getByteFrequencyData(data);
-      const avg = data.reduce((a, b) => a + b, 0) / data.length;
-      const norm = Math.min(1, avg / 75);
+      // Use the 100-3000Hz band for voice (skip DC and high noise)
+      let sum = 0, count = 0;
+      for (let i = 2; i < Math.min(80, data.length); i++) { sum += data[i]; count++; }
+      const avg = sum / count;
+      const norm = Math.min(1, avg / 70);
+
+      // Update lastVoiceActivityTime on significant audio
+      // (lowered threshold 0.12 so quieter speech still registers as activity)
+      if (norm > 0.12) state.lastVoiceActivityTime = performance.now();
 
       micBars[0].style.height = `${4 + norm * 10}px`;
       micBars[1].style.height = `${6 + norm * 14}px`;
@@ -1709,15 +2485,15 @@ Rules:
       if (!state.isListening) return;
       state.isListening = false;
 
+      if (state.vadSilenceTimer) { clearInterval(state.vadSilenceTimer); state.vadSilenceTimer = null; }
       if (state.micRafId) cancelAnimationFrame(state.micRafId);
       if (state.recognition) {
-        try { state.recognition.stop(); } catch (e) {}
+        try { state.recognition.onend = null; state.recognition.stop(); } catch (e) { }
         state.recognition = null;
       }
 
-      const capturedTranscript = state.finalTranscriptBuffer.trim();
+      const capturedTranscript = (state.finalTranscriptBuffer + " " + state.interimTranscript).trim();
 
-      // Stop MediaRecorder and grab audio blob in case fallback is needed
       let audioBlob = null;
       if (state.mediaRecorder && state.mediaRecorder.state !== "inactive") {
         audioBlob = await new Promise((resolve) => {
@@ -1739,10 +2515,9 @@ Rules:
       if (capturedTranscript) {
         await processUserEnglishMessage(capturedTranscript);
       } else if (audioBlob && audioBlob.size > 1200) {
-        // Fallback: Send recorded microphone audio directly to Gemini for English transcription & intelligent response
-        await transcribeAndRespondWithGeminiAudio(audioBlob);
+        await transcribeAndRespondViaGemini(audioBlob);
       } else {
-        setStatus("Ready // English AI", "sky");
+        setStatus(state.camActive ? "Head Cam Active" : "Ready", state.camActive ? "emerald" : "sky");
         setEmotion("neutral");
       }
     }
@@ -1755,89 +2530,148 @@ Rules:
       }, 900);
     }
 
-    async function transcribeAndRespondWithGeminiAudio(blob) {
+    // Fallback: send audio blob to Gemini for transcription + reply.
+    // Gemini natively supports audio input via inlineData with the audio mimeType.
+    async function transcribeAndRespondViaGemini(blob) {
+      if (!GEMINI_API_KEY) {
+        speakEnglish("I heard audio but can't transcribe it without a Gemini API key. Use Chat instead.");
+        return;
+      }
       setStatus("Processing Voice...", "amber");
-      liveTranscriptText.textContent = "Transcribing audio with Gemini...";
+      liveTranscriptText.textContent = "Transcribing audio...";
       voiceHud.classList.remove("hidden");
 
       try {
         const base64Audio = await new Promise((resolve, reject) => {
           const reader = new FileReader();
-          reader.onloadend = () => {
-            const res = reader.result;
-            resolve(res.split(",")[1]);
-          };
+          reader.onloadend = () => resolve(reader.result.split(",")[1]);
           reader.onerror = reject;
           reader.readAsDataURL(blob);
         });
+        const mimeType = blob.type || "audio/webm";
+        const instruction = "Listen to this English voice recording. First transcribe what the user said in one line, then respond in character as AETHER-01. Begin your response with 'TRANSCRIPT:' then the user's words on one line, then ACTION:, EMOTION:, REPLY:.";
 
-        const payload = {
-          contents: [
-            {
-              role: "user",
-              parts: [
-                {
-                  text: "Listen to this English voice command from the user, transcribe what they said, and respond in character as AETHER-01."
-                },
-                {
-                  inlineData: {
-                    mimeType: blob.type || "audio/webm",
-                    data: base64Audio
-                  }
-                }
-              ]
-            }
-          ],
-          systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
-          generationConfig: {
-            responseMimeType: "application/json",
-            responseSchema: {
-              type: "OBJECT",
-              properties: {
-                transcript: { type: "STRING" },
-                reply: { type: "STRING" },
-                action: {
-                  type: "STRING",
-                  enum: ["wave", "greet", "scan", "spin", "groove", "laugh", "hover", "nod", "track"]
-                },
-                emotion: {
-                  type: "STRING",
-                  enum: ["neutral", "happy", "curious", "surprised", "laughing"]
-                }
-              },
-              required: ["transcript", "reply", "action", "emotion"]
-            }
-          }
-        };
-
-        const data = await callGeminiWithRetry(payload);
-        const parsed = JSON.parse(data?.candidates?.[0]?.content?.parts?.[0]?.text);
-        if (parsed.transcript) {
-          liveTranscriptText.textContent = `"${parsed.transcript}"`;
+        // Non-streaming Gemini call (audio is one-shot, no benefit from streaming).
+        const modelList = pickGeminiModelList();
+        let lastError = null;
+        for (const model of modelList) {
+          try {
+            showModelBadge("gemini", model);
+            const url = `${GEMINI_URL_BASE}/${model}:generateContent?key=${GEMINI_API_KEY}`;
+            const resp = await fetch(url, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                contents: [{
+                  role: "user",
+                  parts: [
+                    { text: instruction },
+                    { inlineData: { mimeType, data: base64Audio } }
+                  ]
+                }],
+                systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
+                generationConfig: { temperature: 0.7, maxOutputTokens: 400, candidateCount: 1 }
+              })
+            });
+            if (!resp.ok) { lastError = explainHttpStatus(resp.status); continue; }
+            const data = await resp.json();
+            const parts = data.candidates?.[0]?.content?.parts || [];
+            const text = parts.map((p) => p.text || "").join("");
+            const transcriptMatch = text.match(/TRANSCRIPT:\s*(.+)/i);
+            if (transcriptMatch) liveTranscriptText.textContent = `"${transcriptMatch[1].trim()}"`;
+            const actionMatch = text.match(/ACTION:\s*(\w+)/i);
+            const emotionMatch = text.match(/EMOTION:\s*(\w+)/i);
+            const replyMatch = text.match(/REPLY:\s*([\s\S]+)/i);
+            cancelSpeechAndReset();
+            if (actionMatch && VALID_ACTIONS.includes(actionMatch[1].toLowerCase())) triggerAction(actionMatch[1].toLowerCase());
+            if (emotionMatch && VALID_EMOTIONS.includes(emotionMatch[1].toLowerCase())) setEmotion(emotionMatch[1].toLowerCase());
+            speakEnglish(replyMatch ? replyMatch[1].trim() : text);
+            state.activeVisionModel = model;
+            return;
+          } catch (e) { lastError = e.message; continue; }
         }
-        triggerAction(parsed.action || "nod");
-        setEmotion(parsed.emotion || "happy");
-        speakEnglish(parsed.reply || "Loud and clear!");
+        throw new Error(lastError || "all Gemini models failed");
       } catch (err) {
-        setStatus("Ready // English AI", "sky");
-        speakEnglish("I heard audio input, but it was a little quiet. Try speaking a bit closer or using Chat.");
+        setStatus(state.camActive ? "Head Cam Active" : "Ready", state.camActive ? "emerald" : "sky");
+        speakEnglish("I heard audio input, but it was a little quiet. Try speaking a bit closer or use Chat.");
       } finally {
         setTimeout(() => voiceHud.classList.add("hidden"), 1800);
       }
     }
 
-    // ==================== REAL-TIME WEBCAM HEAD TRACKING & VISION ====================
-    const offscreenCanvas = document.createElement("canvas");
-    offscreenCanvas.width = 96;
-    offscreenCanvas.height = 72;
-    const offscreenCtx = offscreenCanvas.getContext("2d", { willReadFrequently: true });
+    // ==================== MEDIAPIPE FACE MESH HEAD TRACKING ====================
+    let faceLandmarkerModule = null;
+
+    // Load MediaPipe Face Landmarker — tries GPU delegate first, falls back to CPU
+    // (GPU often unavailable on mobile / GitHub Pages contexts).
+    async function loadFaceLandmarker() {
+      if (faceLandmarkerModule) return faceLandmarkerModule;
+      try {
+        const vision = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs");
+        const filesetResolver = await vision.FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm");
+        const modelAssetPath = "https://storage.googleapis.com/mediapipe-models/face_landmarker/face_landmarker/float16/1/face_landmarker.task";
+        // Try GPU first
+        try {
+          faceLandmarkerModule = await vision.FaceLandmarker.createFromOptions(filesetResolver, {
+            baseOptions: { modelAssetPath, delegate: "GPU" },
+            outputFaceBlendshapes: true,
+            outputFacialTransformationMatrixes: true,
+            runningMode: "VIDEO",
+            numFaces: 1
+          });
+        } catch (gpuErr) {
+          // GPU delegate failed (common on mobile) — retry with CPU
+          faceLandmarkerModule = await vision.FaceLandmarker.createFromOptions(filesetResolver, {
+            baseOptions: { modelAssetPath, delegate: "CPU" },
+            outputFaceBlendshapes: true,
+            outputFacialTransformationMatrixes: true,
+            runningMode: "VIDEO",
+            numFaces: 1
+          });
+        }
+        return faceLandmarkerModule;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    // Load MediaPipe Hand Landmarker for raised-hand detection + arm mirroring.
+    // Also tries GPU first, then CPU.
+    let handLandmarkerModule = null;
+    async function loadHandLandmarker() {
+      if (handLandmarkerModule) return handLandmarkerModule;
+      try {
+        const vision = await import("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/vision_bundle.mjs");
+        const filesetResolver = await vision.FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.14/wasm");
+        const modelAssetPath = "https://storage.googleapis.com/mediapipe-models/hand_landmarker/hand_landmarker/float16/1/hand_landmarker.task";
+        try {
+          handLandmarkerModule = await vision.HandLandmarker.createFromOptions(filesetResolver, {
+            baseOptions: { modelAssetPath, delegate: "GPU" },
+            runningMode: "VIDEO",
+            numHands: 2,
+            minHandDetectionConfidence: 0.5,
+            minHandPresenceConfidence: 0.5,
+            minTrackingConfidence: 0.5
+          });
+        } catch (gpuErr) {
+          handLandmarkerModule = await vision.HandLandmarker.createFromOptions(filesetResolver, {
+            baseOptions: { modelAssetPath, delegate: "CPU" },
+            runningMode: "VIDEO",
+            numHands: 2,
+            minHandDetectionConfidence: 0.5,
+            minHandPresenceConfidence: 0.5,
+            minTrackingConfidence: 0.5
+          });
+        }
+        return handLandmarkerModule;
+      } catch (e) {
+        return null;
+      }
+    }
 
     async function toggleHeadCam() {
-      if (state.camActive) {
-        stopHeadCam();
-      } else {
-        await startHeadCam();
-      }
+      if (state.camActive) stopHeadCam();
+      else await startHeadCam();
     }
 
     async function startHeadCam() {
@@ -1857,19 +2691,22 @@ Rules:
         camPipBox.classList.remove("hidden");
         btnRestorePip.classList.add("hidden");
 
-        // Initialize native FaceDetector if supported by browser
-        if ("FaceDetector" in window) {
-          try {
-            state.faceDetector = new window.FaceDetector({ fastMode: true, maxDetectedFaces: 1 });
-            camTrackLabel.textContent = "AI Face Lock";
-          } catch (e) {
-            state.faceDetector = null;
-          }
+        setStatus("Loading Face Mesh...", "amber");
+        const landmarker = await loadFaceLandmarker();
+        if (landmarker) {
+          state.faceLandmarker = landmarker;
+          camTrackLabel.textContent = "Face + Hand Mesh";
+        } else {
+          camTrackLabel.textContent = "Centroid Fallback";
         }
+        // Load hand landmarker in parallel (non-blocking)
+        loadHandLandmarker().then((hlm) => {
+          state.handLandmarker = hlm;
+        });
 
         setStatus("Head Cam Active", "emerald");
         triggerAction("greet");
-        speakEnglish("Optical head tracking active! Move your head and I will follow your motion.");
+        speakEnglish("Optical head tracking active. Move your head and I will follow your motion.");
 
         runHeadTrackingLoop();
       } catch (err) {
@@ -1889,13 +2726,17 @@ Rules:
       camBtnLabel.textContent = "Head Cam";
       camPipContainer.classList.add("hidden");
       camPipContainer.classList.remove("flex");
-      state.prevGrayFrame = null;
-      setStatus("Ready // English AI", "sky");
+      setStatus("Ready", "sky");
     }
+
+    // Offscreen canvas for fallback centroid tracking
+    const offscreenCanvas = document.createElement("canvas");
+    offscreenCanvas.width = 96;
+    offscreenCanvas.height = 72;
+    const offscreenCtx = offscreenCanvas.getContext("2d", { willReadFrequently: true });
 
     async function runHeadTrackingLoop() {
       if (!state.camActive) return;
-
       const rCtx = reticleCanvas.getContext("2d");
       if (reticleCanvas.width !== reticleCanvas.clientWidth || reticleCanvas.height !== reticleCanvas.clientHeight) {
         reticleCanvas.width = reticleCanvas.clientWidth || 192;
@@ -1903,105 +2744,102 @@ Rules:
       }
 
       let detected = false;
-      let boxNormX = 0.5;
-      let boxNormY = 0.45;
-      let boxNormW = 0.34;
-      let boxNormH = 0.44;
+      let boxNormX = 0.5, boxNormY = 0.45, boxNormW = 0.34, boxNormH = 0.44;
       let headTiltDeg = 0;
 
-      // Method A: Native FaceDetector API
-      if (state.faceDetector && webcamVideo.readyState >= 2) {
+      // Method A: MediaPipe Face Landmarker
+      if (state.faceLandmarker && webcamVideo.readyState >= 2) {
         try {
-          const faces = await state.faceDetector.detect(webcamVideo);
-          if (faces && faces.length > 0) {
-            const box = faces[0].boundingBox;
+          const now = performance.now();
+          const results = state.faceLandmarker.detectForVideo(webcamVideo, now);
+          if (results.faceLandmarks && results.faceLandmarks.length > 0) {
+            const lm = results.faceLandmarks[0];
             const vw = webcamVideo.videoWidth || 640;
             const vh = webcamVideo.videoHeight || 480;
-            // Mirror X because video preview is mirrored
-            boxNormX = 1 - (box.x + box.width * 0.5) / vw;
-            boxNormY = (box.y + box.height * 0.48) / vh;
-            boxNormW = box.width / vw;
-            boxNormH = box.height / vh;
 
-            if (faces[0].landmarks && faces[0].landmarks.length >= 2) {
-              const eyes = faces[0].landmarks.filter((l) => l.type === "eye");
-              if (eyes.length === 2) {
-                const dx = eyes[1].locations[0].x - eyes[0].locations[0].x;
-                const dy = eyes[1].locations[0].y - eyes[0].locations[0].y;
-                headTiltDeg = Math.max(-22, Math.min(22, -(Math.atan2(dy, dx) * 180) / Math.PI));
-              }
-            }
+            // Key landmarks: 33 = left eye outer, 263 = right eye outer, 1 = nose tip, 10 = forehead, 152 = chin
+            const leftEye = lm[33], rightEye = lm[263], noseTip = lm[1], forehead = lm[10], chin = lm[152];
+
+            // Mirrored x (because preview is mirrored)
+            const cx = (1 - (leftEye.x + rightEye.x) / 2) * vw;
+            const cy = ((leftEye.y + rightEye.y) / 2) * vh;
+            boxNormX = cx / vw;
+            boxNormY = cy / vh;
+
+            // Roll from eye line
+            const dx = (rightEye.x - leftEye.x) * vw;
+            const dy = (rightEye.y - leftEye.y) * vh;
+            headTiltDeg = Math.max(-22, Math.min(22, -(Math.atan2(dy, dx) * 180) / Math.PI));
+
+            // Yaw from horizontal asymmetry of eye-to-nose distance
+            const leftDist = Math.abs(leftEye.x - noseTip.x);
+            const rightDist = Math.abs(rightEye.x - noseTip.x);
+            const totalDist = leftDist + rightDist;
+            const yawAsym = totalDist > 0 ? (rightDist - leftDist) / totalDist : 0;
+            const yawFromHead = Math.max(-1, Math.min(1, yawAsym * 2.2));
+
+            // Pitch from nose vs forehead-chin midpoint
+            const verticalMid = (forehead.y + chin.y) / 2;
+            const pitchAsym = (noseTip.y - verticalMid) / Math.max(0.001, Math.abs(chin.y - forehead.y));
+            const pitchFromHead = Math.max(-1, Math.min(1, pitchAsym * 3.5));
+
+            boxNormW = 0.32 + Math.abs(yawFromHead) * 0.06;
+            boxNormH = 0.40 + Math.abs(pitchFromHead) * 0.06;
             detected = true;
+
+            // Combine into tracking targets (add yaw/pitch contribution to x/y for head turn feel)
+            state.targetX = Math.max(-1, Math.min(1, (boxNormX - 0.5) * 2.3 + yawFromHead * 0.6));
+            state.targetY = Math.max(-1, Math.min(1, (boxNormY - 0.46) * 2.3 - pitchFromHead * 0.4));
+            state.trackedRoll = headTiltDeg;
+            state.targetRoll = state.trackedRoll;
+
+            // Expression mirroring via blendshapes
+            if (results.faceBlendshapes && results.faceBlendshapes.length > 0) {
+              mirrorBlendshapes(results.faceBlendshapes[0].categories);
+            }
+
+            // Head gesture detection (nod / shake)
+            detectHeadGesturesOnCam(state.targetX, state.targetY);
           }
         } catch (e) {
-          state.faceDetector = null;
+          state.faceLandmarker = null;
         }
       }
 
-      // Method B: Fast Skin-Tone + Motion Centroid Tracking on Offscreen Canvas
+      // Method B: Fallback skin-tone + motion centroid
       if (!detected && webcamVideo.readyState >= 2) {
-        const w = offscreenCanvas.width;
-        const h = offscreenCanvas.height;
+        const w = offscreenCanvas.width, h = offscreenCanvas.height;
         offscreenCtx.drawImage(webcamVideo, 0, 0, w, h);
         const imgData = offscreenCtx.getImageData(0, 0, w, h).data;
+        if (!state.prevGrayFrame) state.prevGrayFrame = new Float32Array(w * h);
 
-        if (!state.prevGrayFrame) {
-          state.prevGrayFrame = new Float32Array(w * h);
-        }
-
-        let sumX = 0;
-        let sumY = 0;
-        let totalWeight = 0;
-        let sumXX = 0;
-        let sumXY = 0;
-        let sumYY = 0;
-
+        let sumX = 0, sumY = 0, totalWeight = 0, sumXX = 0, sumXY = 0, sumYY = 0;
         for (let y = 4; y < h - 4; y++) {
           for (let x = 4; x < w - 4; x++) {
             const idx = (y * w + x) * 4;
-            const r = imgData[idx];
-            const g = imgData[idx + 1];
-            const b = imgData[idx + 2];
+            const r = imgData[idx], g = imgData[idx + 1], b = imgData[idx + 2];
             const lum = 0.299 * r + 0.587 * g + 0.114 * b;
             const pIdx = y * w + x;
             const diff = Math.abs(lum - state.prevGrayFrame[pIdx]);
             state.prevGrayFrame[pIdx] = lum;
-
-            // Skin-tone heuristic in RGB/YCbCr space + motion boost
-            const isSkin =
-              r > 65 &&
-              g > 35 &&
-              b > 20 &&
-              r > g &&
-              r > b &&
-              Math.abs(r - g) > 10;
-
+            const isSkin = r > 65 && g > 35 && b > 20 && r > g && r > b && Math.abs(r - g) > 10;
             let weight = 0;
             if (isSkin) weight += 1.6;
             if (diff > 10) weight += Math.min(4.0, diff * 0.16);
-
-            // Slight center-upper bias where a user's head naturally sits
             const centerBias = 1.15 - Math.hypot((x / w - 0.5) * 1.2, (y / h - 0.44) * 1.2);
             if (centerBias > 0 && weight > 0) {
               weight *= centerBias;
               const mirroredX = w - 1 - x;
-              sumX += mirroredX * weight;
-              sumY += y * weight;
+              sumX += mirroredX * weight; sumY += y * weight;
               sumXX += mirroredX * mirroredX * weight;
-              sumXY += mirroredX * y * weight;
-              sumYY += y * y * weight;
+              sumXY += mirroredX * y * weight; sumYY += y * y * weight;
               totalWeight += weight;
             }
           }
         }
-
         if (totalWeight > 18) {
-          const cx = sumX / totalWeight;
-          const cy = sumY / totalWeight;
-          boxNormX = cx / w;
-          boxNormY = cy / h;
-
-          // Estimate head roll angle from covariance matrix orientation
+          const cx = sumX / totalWeight, cy = sumY / totalWeight;
+          boxNormX = cx / w; boxNormY = cy / h;
           const covXX = sumXX / totalWeight - cx * cx;
           const covYY = sumYY / totalWeight - cy * cy;
           const covXY = sumXY / totalWeight - cx * cy;
@@ -2010,59 +2848,162 @@ Rules:
             headTiltDeg = Math.max(-18, Math.min(18, (angleRad * 180) / Math.PI * 0.35));
           }
           detected = true;
+          const rawTargetX = Math.max(-1, Math.min(1, (boxNormX - 0.5) * 2.3));
+          const rawTargetY = Math.max(-1, Math.min(1, (boxNormY - 0.46) * 2.3));
+          state.trackedNormX += (rawTargetX - state.trackedNormX) * 0.24;
+          state.trackedNormY += (rawTargetY - state.trackedNormY) * 0.24;
+          state.trackedRoll += (headTiltDeg - state.trackedRoll) * 0.2;
+          state.targetX = state.trackedNormX;
+          state.targetY = state.trackedNormY;
+          state.targetRoll = state.trackedRoll;
+          detectHeadGesturesOnCam(state.targetX, state.targetY);
         }
       }
 
-      // Draw Live Tracking Reticle on PIP Canvas
+      // Draw reticle
       rCtx.clearRect(0, 0, reticleCanvas.width, reticleCanvas.height);
       if (detected) {
-        // Smooth target coordinates (-1 to 1)
-        const rawTargetX = Math.max(-1, Math.min(1, (boxNormX - 0.5) * 2.3));
-        const rawTargetY = Math.max(-1, Math.min(1, (boxNormY - 0.46) * 2.3));
-
-        state.trackedNormX += (rawTargetX - state.trackedNormX) * 0.24;
-        state.trackedNormY += (rawTargetY - state.trackedNormY) * 0.24;
-        state.trackedRoll += (headTiltDeg - state.trackedRoll) * 0.2;
-
-        state.targetX = state.trackedNormX;
-        state.targetY = state.trackedNormY;
-        state.targetRoll = state.trackedRoll;
-
-        detectHeadGesturesOnCam(state.trackedNormX, state.trackedNormY);
-
-        // Draw HUD corner brackets around tracked head
         const rx = boxNormX * reticleCanvas.width;
         const ry = boxNormY * reticleCanvas.height;
         const rw = boxNormW * reticleCanvas.width;
         const rh = boxNormH * reticleCanvas.height;
-        const x0 = rx - rw * 0.5;
-        const y0 = ry - rh * 0.5;
-        const len = 10;
-
+        const x0 = rx - rw * 0.5, y0 = ry - rh * 0.5, len = 10;
         rCtx.strokeStyle = "#34d399";
         rCtx.lineWidth = 2;
         rCtx.beginPath();
-        // Top-left
         rCtx.moveTo(x0, y0 + len); rCtx.lineTo(x0, y0); rCtx.lineTo(x0 + len, y0);
-        // Top-right
         rCtx.moveTo(x0 + rw - len, y0); rCtx.lineTo(x0 + rw, y0); rCtx.lineTo(x0 + rw, y0 + len);
-        // Bottom-left
         rCtx.moveTo(x0, y0 + rh - len); rCtx.lineTo(x0, y0 + rh); rCtx.lineTo(x0 + len, y0 + rh);
-        // Bottom-right
         rCtx.moveTo(x0 + rw - len, y0 + rh); rCtx.lineTo(x0 + rw, y0 + rh); rCtx.lineTo(x0 + rw, y0 + rh - len);
         rCtx.stroke();
-
-        // Center crosshair dot
         rCtx.fillStyle = "#38bdf8";
         rCtx.beginPath();
         rCtx.arc(rx, ry, 2.5, 0, Math.PI * 2);
         rCtx.fill();
       }
 
+      // ----- Hand detection + raised-hand mirroring -----
+      // Run Hand Landmarker if available. If a hand is raised above the face,
+      // set state.handMirrorActive so the physics loop can override the arm.
+      if (state.handLandmarker && webcamVideo.readyState >= 2 && detected) {
+        try {
+          const handResults = state.handLandmarker.detectForVideo(webcamVideo, performance.now());
+          if (handResults.landmarks && handResults.landmarks.length > 0) {
+            // Pick the most-raised hand (smallest wrist.y = highest in frame)
+            let bestHand = null;
+            let bestWristY = 1.0;
+            let bestHandIndex = -1;
+            for (let i = 0; i < handResults.landmarks.length; i++) {
+              const wrist = handResults.landmarks[i][0];
+              if (wrist && wrist.y < bestWristY) {
+                bestWristY = wrist.y;
+                bestHand = handResults.landmarks[i];
+                bestHandIndex = i;
+              }
+            }
+            if (bestHand && bestWristY < boxNormY - 0.05) {
+              // Hand is raised above face center → activate mirror
+              const wrist = bestHand[0];
+              const indexTip = bestHand[8]; // index finger tip
+              // Mirrored x because preview is mirrored
+              const mirroredWristX = 1 - wrist.x;
+              // Map to -1..1 range
+              const mirrorX = Math.max(-1, Math.min(1, (mirroredWristX - 0.5) * 2));
+              // y: wrist.y of 0 = top of frame = arm raised high; wrist.y of 0.5 = middle
+              const mirrorY = Math.max(-1, Math.min(1, (wrist.y - 0.5) * 2));
+              state.handMirrorActive = true;
+              state.handMirrorX = mirrorX;
+              state.handMirrorY = mirrorY;
+              // Decide which robot arm to move based on which side of frame the hand is on
+              // (mirroredWristX > 0.5 means user's right hand → robot's left arm from user POV,
+              //  which is the robot's RIGHT arm in robot-local terms)
+              state.handMirrorSide = mirroredWristX > 0.5 ? "right" : "left";
+              state.lastHandSeenTime = performance.now();
+
+              // Draw hand landmark overlay on PIP
+              const handedness = handResults.handednesses?.[bestHandIndex]?.[0]?.categoryName || "";
+              const handColor = state.handMirrorSide === "right" ? "#fbbf24" : "#a78bfa";
+              rCtx.strokeStyle = handColor;
+              rCtx.lineWidth = 1.5;
+              for (const lm of bestHand) {
+                const px = (1 - lm.x) * reticleCanvas.width;
+                const py = lm.y * reticleCanvas.height;
+                rCtx.beginPath();
+                rCtx.arc(px, py, 2, 0, Math.PI * 2);
+                rCtx.stroke();
+              }
+              // Connect wrist→index tip with a thicker line to show "raised"
+              const wpx = (1 - wrist.x) * reticleCanvas.width;
+              const wpy = wrist.y * reticleCanvas.height;
+              const tpx = (1 - indexTip.x) * reticleCanvas.width;
+              const tpy = indexTip.y * reticleCanvas.height;
+              rCtx.beginPath();
+              rCtx.moveTo(wpx, wpy); rCtx.lineTo(tpx, tpy);
+              rCtx.stroke();
+            }
+          }
+        } catch (e) { /* hand detection optional */ }
+      }
+
+      // Deactivate hand mirror if no hand seen for 400ms
+      if (state.handMirrorActive && performance.now() - state.lastHandSeenTime > 400) {
+        state.handMirrorActive = false;
+      }
+
       state.camRafId = requestAnimationFrame(runHeadTrackingLoop);
     }
 
-    // Detects quick nod or horizontal wave on camera and reacts naturally
+    // Mirror user facial expressions via MediaPipe blendshapes
+    function mirrorBlendshapes(categories) {
+      if (!categories || !categories.length) return;
+      const get = (name) => {
+        const c = categories.find((c) => c.categoryName === name);
+        return c ? c.score : 0;
+      };
+
+      const now = performance.now();
+      // Only mirror when in track mode (don't override active gestures)
+      if (state.currentAction !== "track" && state.currentAction !== "idle_breathe") return;
+
+      const smileL = get("mouthSmileLeft");
+      const smileR = get("mouthSmileRight");
+      const smile = (smileL + smileR) / 2;
+      const browUp = (get("browOuterUpLeft") + get("browOuterUpRight")) / 2;
+      const jawOpen = get("jawOpen");
+      const blinkL = get("eyeBlinkLeft");
+      const blinkR = get("eyeBlinkRight");
+
+      // Smile -> happy
+      if (smile > 0.35 && now - state.lastSmileMirrorTime > 4000) {
+        state.lastSmileMirrorTime = now;
+        setEmotion("happy");
+        setTimeout(() => { if (state.currentAction === "track") setEmotion("neutral"); }, 2500);
+      }
+      // Raised brows -> surprised
+      else if (browUp > 0.4 && now - state.lastSmileMirrorTime > 4000) {
+        state.lastSmileMirrorTime = now;
+        setEmotion("surprised");
+        setTimeout(() => { if (state.currentAction === "track") setEmotion("neutral"); }, 1800);
+      }
+      // Jaw open (yelling / talking loud) -> alert
+      else if (jawOpen > 0.5 && now - state.lastSmileMirrorTime > 4000) {
+        state.lastSmileMirrorTime = now;
+        setEmotion("alert");
+        setTimeout(() => { if (state.currentAction === "track") setEmotion("neutral"); }, 1500);
+      }
+
+      // Blink mirror (one eye wink vs both blink)
+      if (blinkL > 0.5 && blinkR < 0.3 && now - state.lastBlinkMirrorTime > 3000) {
+        state.lastBlinkMirrorTime = now;
+        setEmotion("wink");
+        state.winkUntil = now + 800;
+        setTimeout(() => { if (state.currentAction === "track") setEmotion("neutral"); }, 900);
+      } else if (blinkL > 0.5 && blinkR > 0.5 && now - state.lastBlinkMirrorTime > 2500) {
+        state.lastBlinkMirrorTime = now;
+        triggerBlink();
+      }
+    }
+
     function detectHeadGesturesOnCam(nx, ny) {
       const now = performance.now();
       state.prevHeadYHistory.push({ t: now, y: ny });
@@ -2070,7 +3011,7 @@ Rules:
       state.prevHeadYHistory = state.prevHeadYHistory.filter((p) => now - p.t < 750);
       state.prevHeadXHistory = state.prevHeadXHistory.filter((p) => now - p.t < 850);
 
-      if (now - state.lastCamReactionTime < 4500 || state.currentAction !== "track") return;
+      if (now - state.lastCamReactionTime < 4500 || (state.currentAction !== "track" && state.currentAction !== "idle_breathe")) return;
 
       if (state.prevHeadYHistory.length >= 8) {
         const ys = state.prevHeadYHistory.map((p) => p.y);
@@ -2078,33 +3019,28 @@ Rules:
         if (spanY > 0.52) {
           state.lastCamReactionTime = now;
           triggerAction("nod");
-          setStatus("Head Nod Detected!", "emerald");
-          setTimeout(() => {
-            if (state.camActive) setStatus("Head Cam Active", "emerald");
-          }, 1600);
+          setStatus("Nod Detected!", "emerald");
+          setTimeout(() => { if (state.camActive) setStatus("Head Cam Active", "emerald"); }, 1600);
           return;
         }
       }
-
       if (state.prevHeadXHistory.length >= 10) {
         const xs = state.prevHeadXHistory.map((p) => p.x);
         const spanX = Math.max(...xs) - Math.min(...xs);
         if (spanX > 0.85) {
           state.lastCamReactionTime = now;
-          triggerAction("wave");
-          setStatus("Motion Wave Detected!", "emerald");
-          setTimeout(() => {
-            if (state.camActive) setStatus("Head Cam Active", "emerald");
-          }, 1800);
+          triggerAction("shake_head");
+          setStatus("Head Shake Detected!", "emerald");
+          setTimeout(() => { if (state.camActive) setStatus("Head Cam Active", "emerald"); }, 1800);
         }
       }
     }
 
-    // Multimodal Vision ("Look at Me" button or voice query)
-    async function handleVisionInteraction(promptQuestion = "Describe what you see and react warmly in English.") {
+    // Multimodal Vision query ("Look at Me")
+    async function handleVisionInteraction(promptQuestion = "Describe what you see and react warmly.") {
       if (!state.camActive || webcamVideo.readyState < 2) {
         await startHeadCam();
-        await new Promise((r) => setTimeout(r, 600));
+        await new Promise((r) => setTimeout(r, 700));
       }
       if (!state.camActive) return;
 
@@ -2119,66 +3055,30 @@ Rules:
         sCtx.drawImage(webcamVideo, 0, 0, snapCanvas.width, snapCanvas.height);
         const base64Jpeg = snapCanvas.toDataURL("image/jpeg", 0.82).split(",")[1];
 
-        const payload = {
-          contents: [
-            {
-              role: "user",
-              parts: [
-                {
-                  text: `The user is on webcam and asked: "${promptQuestion}". Look at the webcam image and give a warm, perceptive, concise English response (1-2 sentences) as AETHER-01, along with an appropriate action and emotion.`
-                },
-                {
-                  inlineData: {
-                    mimeType: "image/jpeg",
-                    data: base64Jpeg
-                  }
-                }
-              ]
-            }
-          ],
-          systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] },
-          generationConfig: {
-            responseMimeType: "application/json",
-            responseSchema: {
-              type: "OBJECT",
-              properties: {
-                reply: { type: "STRING" },
-                action: {
-                  type: "STRING",
-                  enum: ["wave", "greet", "scan", "spin", "groove", "laugh", "hover", "nod", "track"]
-                },
-                emotion: {
-                  type: "STRING",
-                  enum: ["neutral", "happy", "curious", "surprised", "laughing"]
-                }
-              },
-              required: ["reply", "action", "emotion"]
-            }
-          }
-        };
-
-        const data = await callGeminiWithRetry(payload);
-        const parsed = JSON.parse(data?.candidates?.[0]?.content?.parts?.[0]?.text);
-        triggerAction(parsed.action || "greet");
-        setEmotion(parsed.emotion || "happy");
-        speakEnglish(parsed.reply || "I see you clearly! Looking sharp in the studio today.");
+        sentenceBuffer.text = "";
+        await streamGemini(promptQuestion, base64Jpeg);
       } catch (err) {
         setStatus("Head Cam Active", "emerald");
         triggerAction("greet");
-        speakEnglish("My optical sensors see you loud and clear! Ready whenever you are.");
+        speakEnglish("My optical sensors see you loud and clear. Ready whenever you are.");
       }
     }
 
-    // ==================== MAIN 60FPS HIERARCHICAL PHYSICS LOOP ====================
+    // ==================== MAIN 60FPS PHYSICS LOOP ====================
     function animatePhysics(now) {
-      // 1. Natural Autonomous Blinking
+      // 1. Natural blink
       if (now >= state.nextBlinkTime) {
         triggerBlink();
         state.nextBlinkTime = now + 2400 + Math.random() * 3400;
       }
 
-      // 2. Check Timed Actions Completion
-      if (state.currentAction !== "track" && state.actionDuration > 0) {
+      // 2. Idle-breathe auto-trigger after 30s of inactivity
+      if (state.currentAction === "track" && now - state.lastInteractionTime > 30000) {
+        triggerAction("idle_breathe");
+      }
+
+      // 3. Timed action completion
+      if (state.currentAction !== "track" && state.currentAction !== "idle_breathe" && state.actionDuration > 0) {
         if (now - state.actionStartTime > state.actionDuration) {
           state.currentAction = "track";
           visorFrame.classList.remove("scanning");
@@ -2189,12 +3089,11 @@ Rules:
         }
       }
 
-      // 3. Subtle Idle Breathing & Studio Float
+      // 4. Idle breathing + micro-sway
       const t = now * 0.001;
       const breathe = Math.sin(t * 2.1);
       const microSway = Math.cos(t * 1.15);
 
-      // Base tracking targets
       let goalEyeX = state.targetX;
       let goalEyeY = state.targetY;
       let goalHeadYaw = state.targetX * 26;
@@ -2206,7 +3105,6 @@ Rules:
       let goalPelvisYaw = state.targetX * 4;
       let goalPelvisY = breathe * 2.2;
 
-      // Default ready stance arms
       let goalLShoulderZ = 13 + breathe * 1.2;
       let goalLShoulderX = 5;
       let goalLElbowX = -22 + breathe * 1.5;
@@ -2214,8 +3112,9 @@ Rules:
       let goalRShoulderX = 5;
       let goalRElbowX = -22 + breathe * 1.5;
 
-      // Action overrides
       const elapsed = (now - state.actionStartTime) * 0.001;
+
+      // Action-specific overrides
       if (state.currentAction === "wave") {
         goalRShoulderZ = -138 + Math.sin(elapsed * 11) * 18;
         goalRShoulderX = 14;
@@ -2272,51 +3171,152 @@ Rules:
       } else if (state.currentAction === "nod") {
         const nodWave = Math.sin(elapsed * 10) * Math.exp(-elapsed * 1.4);
         goalHeadPitch += nodWave * 16;
+      } else if (state.currentAction === "shake_head") {
+        const shakeWave = Math.sin(elapsed * 14) * Math.exp(-elapsed * 1.2);
+        goalHeadYaw += shakeWave * 22;
+      } else if (state.currentAction === "shrug") {
+        const lift = Math.sin(Math.min(1, elapsed / 0.4) * Math.PI);
+        goalLShoulderZ = 13 + 26 * lift;
+        goalRShoulderZ = -13 - 26 * lift;
+        goalLElbowX = -22 - 18 * lift;
+        goalRElbowX = -22 - 18 * lift;
+        goalHeadRoll = Math.sin(elapsed * 4) * 4;
+      } else if (state.currentAction === "tilt_head") {
+        goalHeadRoll = -18 + Math.sin(elapsed * 2) * 2;
+        goalTorsoRoll = -3;
+      } else if (state.currentAction === "think") {
+        // Right hand to chin
+        const lift = Math.min(1, elapsed / 0.5);
+        goalRShoulderZ = -90 * lift - 10;
+        goalRShoulderX = 20 * lift;
+        goalRElbowX = -110 * lift;
+        goalHeadPitch = 8 * lift;
+        goalHeadRoll = 4 * lift;
+        goalEyeY = -0.3;
+      } else if (state.currentAction === "present") {
+        // Both arms open outward "ta-da"
+        const open = Math.min(1, elapsed / 0.4);
+        goalLShoulderZ = 13 + 70 * open;
+        goalRShoulderZ = -13 - 70 * open;
+        goalLElbowX = -10 - 25 * open;
+        goalRElbowX = -10 - 25 * open;
+        goalTorsoPitch = -4 * open;
+        goalHeadPitch = -4 * open;
+      } else if (state.currentAction === "bow") {
+        // Deep torso forward bow, arms back
+        const bowDepth = Math.sin(Math.min(1, elapsed / 1.0) * Math.PI);
+        goalTorsoPitch = 22 * bowDepth;
+        goalHeadPitch = 14 * bowDepth;
+        goalLShoulderZ = 13 - 18 * bowDepth;
+        goalRShoulderZ = -13 + 18 * bowDepth;
+        goalLElbowX = -22 - 16 * bowDepth;
+        goalRElbowX = -22 - 16 * bowDepth;
+        goalPelvisY = 4 * bowDepth;
+      } else if (state.currentAction === "celebrate") {
+        // Both arms up in victory V + bounce
+        const bounce = Math.abs(Math.sin(elapsed * 6));
+        goalLShoulderZ = -160 + bounce * 6;
+        goalRShoulderZ = 160 - bounce * 6;
+        goalLShoulderX = 20;
+        goalRShoulderX = 20;
+        goalLElbowX = -8;
+        goalRElbowX = -8;
+        goalPelvisY = -bounce * 6;
+        goalHeadRoll = Math.sin(elapsed * 5) * 4;
+      } else if (state.currentAction === "startle") {
+        // Quick recoil: torso back, arms up defensively
+        const flinch = Math.exp(-elapsed * 2.5);
+        goalTorsoPitch = -14 * flinch;
+        goalPelvisY = 10 * flinch;
+        goalLShoulderZ = 13 + 60 * flinch;
+        goalRShoulderZ = -13 - 60 * flinch;
+        goalLElbowX = -10;
+        goalRElbowX = -10;
+        goalHeadPitch = -8 * flinch;
+      } else if (state.currentAction === "facepalm") {
+        // Right hand to forehead
+        const lift = Math.min(1, elapsed / 0.35);
+        goalRShoulderZ = -150 * lift - 5;
+        goalRShoulderX = 30 * lift;
+        goalRElbowX = -90 * lift;
+        goalHeadPitch = 8 * lift;
+        goalHeadRoll = 5 * lift;
+        goalTorsoPitch = 6 * lift;
+      } else if (state.currentAction === "idle_breathe") {
+        // Subtle breathing + slow sway, eyes drift gently
+        goalPelvisY = breathe * 3.5;
+        goalTorsoPitch = breathe * 1.8;
+        goalHeadPitch = breathe * 1.2;
+        goalHeadRoll = microSway * 1.5;
+        goalEyeX = Math.sin(t * 0.4) * 0.15;
+        goalEyeY = Math.cos(t * 0.3) * 0.1;
       }
 
-      // Subtle conversational nod while speaking
+      // Conversational nod while speaking
       if (state.isSpeaking) {
         goalHeadPitch += Math.sin(t * 9) * 2.8;
         goalHeadRoll += Math.cos(t * 5.2) * 1.8;
       }
 
-      // 4. Hierarchical Lerp (Eyes fastest -> Head -> Torso -> Arms -> Pelvis)
+      // Hand-mirror override: when user raises a hand in Head Cam mode,
+      // the robot's corresponding arm follows the user's hand position.
+      // This overrides the action-driven arm goals so the robot "acts like" the user.
+      if (state.handMirrorActive && state.camActive) {
+        // mirrorX: -1 (user's left) to 1 (user's right)
+        // mirrorY: -1 (high) to 1 (low)
+        const armRaise = (state.handMirrorY * -0.5 + 0.5); // 0=down, 1=up high
+        const armSide = state.handMirrorX; // -1..1 side-to-side
+        if (state.handMirrorSide === "right") {
+          // Robot's right arm (negative Z in our convention)
+          goalRShoulderZ = -90 - armRaise * 70;        // raise up to ~-160 when fully up
+          goalRShoulderX = 10 + armSide * 20;          // tilt in/out based on hand x
+          goalRElbowX = -20 - armRaise * 25;           // bend elbow more when raised
+          goalLShoulderZ = 13 + breathe * 1.2;         // left arm stays relaxed
+          goalLElbowX = -22 + breathe * 1.5;
+        } else {
+          // Robot's left arm (positive Z in our convention)
+          goalLShoulderZ = 90 + armRaise * 70;
+          goalLShoulderX = 10 - armSide * 20;
+          goalLElbowX = -20 - armRaise * 25;
+          goalRShoulderZ = -13 - breathe * 1.2;
+          goalRElbowX = -22 + breathe * 1.5;
+        }
+        // Head looks toward the raised hand
+        goalHeadYaw = state.handMirrorX * 18;
+        goalHeadPitch = -armRaise * 8;
+        // Slight happy expression when mirroring
+        if (state.emotion === "neutral" || state.emotion === "thinking") {
+          setEmotion("happy");
+        }
+      }
+
+      // Hierarchical lerp
       state.eyeX += (goalEyeX - state.eyeX) * 0.28;
       state.eyeY += (goalEyeY - state.eyeY) * 0.28;
-
       state.headYaw += (goalHeadYaw - state.headYaw) * 0.14;
       state.headPitch += (goalHeadPitch - state.headPitch) * 0.14;
       state.headRoll += (goalHeadRoll - state.headRoll) * 0.14;
-
       state.torsoYaw += (goalTorsoYaw - state.torsoYaw) * 0.085;
       state.torsoPitch += (goalTorsoPitch - state.torsoPitch) * 0.085;
       state.torsoRoll += (goalTorsoRoll - state.torsoRoll) * 0.085;
-
       state.pelvisYaw += (goalPelvisYaw - state.pelvisYaw) * 0.09;
       state.pelvisY += (goalPelvisY - state.pelvisY) * 0.12;
-
       state.leftShoulderZ += (goalLShoulderZ - state.leftShoulderZ) * 0.14;
       state.leftShoulderX += (goalLShoulderX - state.leftShoulderX) * 0.14;
       state.leftElbowX += (goalLElbowX - state.leftElbowX) * 0.16;
-
       state.rightShoulderZ += (goalRShoulderZ - state.rightShoulderZ) * 0.14;
       state.rightShoulderX += (goalRShoulderX - state.rightShoulderX) * 0.14;
       state.rightElbowX += (goalRElbowX - state.rightElbowX) * 0.16;
 
-      // Orbit camera drag smoothing
       state.orbitYaw += (state.targetOrbitYaw - state.orbitYaw) * 0.12;
       state.orbitPitch += (state.targetOrbitPitch - state.orbitPitch) * 0.12;
 
-      // 5. Apply 3D CSS Transforms
+      // Apply 3D CSS transforms
       robotWorld.style.transform = `rotateX(${state.orbitPitch.toFixed(2)}deg) rotateY(${state.orbitYaw.toFixed(2)}deg)`;
-
       robotRoot.style.transform = `translate3d(0, ${state.pelvisY.toFixed(2)}px, 0) rotateY(${state.pelvisYaw.toFixed(2)}deg)`;
-
       torsoPivot.style.transform = `rotateX(${state.torsoPitch.toFixed(2)}deg) rotateY(${state.torsoYaw.toFixed(2)}deg) rotateZ(${state.torsoRoll.toFixed(2)}deg)`;
-
       headPivot.style.transform = `rotateX(${(state.headPitch - state.torsoPitch * 0.45).toFixed(2)}deg) rotateY(${(state.headYaw - state.torsoYaw * 0.5).toFixed(2)}deg) rotateZ(${state.headRoll.toFixed(2)}deg)`;
 
-      // Eyes & Pupils inside Visor
       const faceShiftX = state.eyeX * 9;
       const faceShiftY = state.eyeY * 6;
       faceMatrix.style.transform = `translate3d(${faceShiftX.toFixed(2)}px, ${faceShiftY.toFixed(2)}px, 0)`;
@@ -2324,14 +3324,12 @@ Rules:
       pupilLeft.style.transform = pupilShift;
       pupilRight.style.transform = pupilShift;
 
-      // Arms
       armLeft.style.transform = `rotateZ(${state.leftShoulderZ.toFixed(2)}deg) rotateX(${state.leftShoulderX.toFixed(2)}deg)`;
       forearmLeft.style.transform = `rotateX(${state.leftElbowX.toFixed(2)}deg) rotateZ(-6deg)`;
-
       armRight.style.transform = `rotateZ(${state.rightShoulderZ.toFixed(2)}deg) rotateX(${state.rightShoulderX.toFixed(2)}deg)`;
       forearmRight.style.transform = `rotateX(${state.rightElbowX.toFixed(2)}deg) rotateZ(6deg)`;
 
-      // 6. Audio-Reactive 5-Bar LED Mouth Equalizer during English TTS
+      // Audio-reactive 5-bar mouth during TTS
       if (state.isSpeaking) {
         const energy = 0.45 + 0.55 * Math.abs(Math.sin(now * 0.022));
         const weights = [0.55, 0.88, 1.0, 0.85, 0.52];
@@ -2346,18 +3344,14 @@ Rules:
     }
 
     // ==================== EVENT LISTENERS ====================
-    // Pointer gaze tracking (when Head Cam isn't overriding)
     window.addEventListener("pointermove", (e) => {
       const now = performance.now();
       const nx = (e.clientX / window.innerWidth) * 2 - 1;
       const ny = (e.clientY / window.innerHeight) * 2 - 1;
-
       if (!state.camActive) {
         state.targetX = Math.max(-1, Math.min(1, nx));
         state.targetY = Math.max(-1, Math.min(1, ny));
       }
-
-      // Widen eyes briefly on fast pointer motion
       const dt = now - state.lastPointerMoveTime;
       if (dt > 0 && dt < 60 && state.currentAction === "track" && !state.isSpeaking) {
         const speed = Math.hypot(e.movementX || 0, e.movementY || 0) / dt;
@@ -2365,14 +3359,11 @@ Rules:
           setEmotion("surprised");
           clearTimeout(state.surpriseTimer);
           state.surpriseTimer = setTimeout(() => {
-            if (state.emotion === "surprised" && state.currentAction === "track") {
-              setEmotion("neutral");
-            }
+            if (state.emotion === "surprised" && state.currentAction === "track") setEmotion("neutral");
           }, 420);
         }
       }
       state.lastPointerMoveTime = now;
-
       if (state.isDragging) {
         const dx = e.clientX - state.dragStartX;
         const dy = e.clientY - state.dragStartY;
@@ -2387,12 +3378,8 @@ Rules:
       state.dragStartX = e.clientX;
       state.dragStartY = e.clientY;
     });
+    window.addEventListener("pointerup", () => { state.isDragging = false; });
 
-    window.addEventListener("pointerup", () => {
-      state.isDragging = false;
-    });
-
-    // Clicking directly on the robot triggers a cheerful laugh & chuckle!
     robotRoot.addEventListener("click", (e) => {
       e.stopPropagation();
       ensureAudioCtx();
@@ -2402,11 +3389,9 @@ Rules:
         "Hehe! My optical sensors love the attention.",
         "Haha! Careful, you'll overload my humor matrix!"
       ];
-      const line = quips[Math.floor(Math.random() * quips.length)];
-      speakEnglish(line);
+      speakEnglish(quips[Math.floor(Math.random() * quips.length)]);
     });
 
-    // Dock action buttons
     document.querySelectorAll(".dock-btn[data-action]").forEach((btn) => {
       btn.addEventListener("click", () => {
         ensureAudioCtx();
@@ -2414,19 +3399,15 @@ Rules:
       });
     });
 
-    // Speak button
     btnSpeak.addEventListener("click", toggleVoiceRecognition);
 
-    // Chat text toggle & submission
     const btnTypeToggle = document.getElementById("btnTypeToggle");
     const chatInputForm = document.getElementById("chatInputForm");
     const chatInputField = document.getElementById("chatInputField");
 
     btnTypeToggle.addEventListener("click", () => {
       chatInputForm.classList.toggle("hidden");
-      if (!chatInputForm.classList.contains("hidden")) {
-        chatInputField.focus();
-      }
+      if (!chatInputForm.classList.contains("hidden")) chatInputField.focus();
     });
 
     chatInputForm.addEventListener("submit", (e) => {
@@ -2438,7 +3419,6 @@ Rules:
       processUserEnglishMessage(val);
     });
 
-    // Head Cam & Vision controls
     btnHeadCam.addEventListener("click", () => {
       ensureAudioCtx();
       toggleHeadCam();
@@ -2453,13 +3433,11 @@ Rules:
       camPipBox.classList.add("hidden");
       btnRestorePip.classList.remove("hidden");
     });
-
     btnRestorePip.addEventListener("click", () => {
       camPipBox.classList.remove("hidden");
       btnRestorePip.classList.add("hidden");
     });
 
-    // Top-right utility controls
     document.getElementById("btnReset").addEventListener("click", () => {
       ensureAudioCtx();
       state.targetOrbitYaw = 0;
@@ -2477,6 +3455,9 @@ Rules:
       document.getElementById("iconSoundOff").classList.toggle("hidden", state.soundEnabled);
       if (!state.soundEnabled && "speechSynthesis" in window) {
         window.speechSynthesis.cancel();
+        state.isSpeaking = false;
+        state.speechQueueInFlight = 0;
+        resetMouthBars();
       } else {
         ensureAudioCtx();
         playServoChirp(380, 560, 0.12);
@@ -2485,38 +3466,61 @@ Rules:
 
     document.getElementById("btnFullscreen").addEventListener("click", () => {
       if (!document.fullscreenElement) {
-        document.documentElement.requestFullscreen().catch(() => {});
+        document.documentElement.requestFullscreen().catch(() => { });
       } else {
-        document.exitFullscreen().catch(() => {});
+        document.exitFullscreen().catch(() => { });
       }
     });
 
-    // Keyboard shortcuts (1-7 for gestures, Spacebar for Hover/Voice)
+    // Keyboard shortcuts
     window.addEventListener("keydown", (e) => {
       if (document.activeElement === chatInputField) return;
       const keyMap = {
-        "1": "wave",
-        "2": "greet",
-        "3": "scan",
-        "4": "spin",
-        "5": "groove",
-        "6": "laugh",
-        "7": "track"
+        "1": "wave", "2": "greet", "3": "nod", "4": "spin", "5": "groove",
+        "6": "laugh", "7": "hover", "8": "idle_breathe", "9": "scan"
       };
-      if (keyMap[e.key]) {
+      const shiftMap = {
+        "1": "shake_head", "2": "tilt_head", "3": "shrug", "4": "think",
+        "5": "bow", "6": "present", "7": "celebrate", "8": "startle", "9": "facepalm"
+      };
+      if (e.shiftKey && shiftMap[e.key]) {
+        ensureAudioCtx();
+        triggerAction(shiftMap[e.key]);
+        e.preventDefault();
+      } else if (keyMap[e.key]) {
         ensureAudioCtx();
         triggerAction(keyMap[e.key]);
+      } else if (e.key.toLowerCase() === "t") {
+        ensureAudioCtx();
+        triggerAction("track");
       } else if (e.code === "Space" && !e.repeat) {
         e.preventDefault();
-        ensureAudioCtx();
-        triggerAction("hover");
+        toggleVoiceRecognition();
       }
     });
 
-    // Start 60fps animation loop on window load
-    window.onload = () => {
+    // Start physics loop
+    window.addEventListener("load", () => {
       requestAnimationFrame(animatePhysics);
-    };
+      // Show missing-key warnings if either key is absent.
+      const hasGroq = !!GROQ_API_KEY;
+      const hasGemini = !!GEMINI_API_KEY;
+      if (!hasGroq && !hasGemini) {
+        updateSubtitle("Add BOTH API keys: GROQ_API_KEY (console.groq.com/keys) and GEMINI_API_KEY (aistudio.google.com/apikey). Edit the <script> tag, save, then refresh.");
+        setStatus("Add API Keys", "amber");
+      } else if (!hasGroq) {
+        updateSubtitle("Add your GROQ_API_KEY (console.groq.com/keys) for chat replies. Vision will work via Gemini.");
+        setStatus("Add Groq Key", "amber");
+        showModelBadge("gemini", state.activeVisionModel);
+      } else if (!hasGemini) {
+        updateSubtitle("Add your GEMINI_API_KEY (aistudio.google.com/apikey) for camera vision queries. Chat will work via Groq.");
+        setStatus("Add Gemini Key", "amber");
+        showModelBadge("groq", state.activeChatModel);
+      } else {
+        showModelBadge("groq", state.activeChatModel);
+      }
+    });
   </script>
 </body>
+
 </html>
