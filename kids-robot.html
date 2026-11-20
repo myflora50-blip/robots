@@ -1,0 +1,2056 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Bebo's 3D Learning Arcade</title>
+
+  <!-- iPad & iOS Progressive Web App (PWA) Meta Tags -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Bebo Arcade" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="theme-color" content="#0b0e14" />
+  <link id="appleTouchIcon" rel="apple-touch-icon" />
+  <link id="appManifest" rel="manifest" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --bg-core: #0b0e14;
+      --bg-radial: #182338;
+      --accent: #00f0ff;
+      --accent-glow: rgba(0, 240, 255, 0.55);
+      --accent-soft: rgba(0, 240, 255, 0.16);
+      --shell-light: #ffffff;
+      --shell-mid: #e4eaf3;
+      --shell-shadow: #9ba8bd;
+      --shell-deep: #5c687c;
+      --visor-dark: #070a10;
+      --visor-mid: #121826;
+      --ui-glass: rgba(16, 23, 38, 0.84);
+      --ui-border: rgba(255, 255, 255, 0.14);
+      --gold: #ffd43b;
+      --pink: #ff4d94;
+      --green: #00ffa3;
+    }
+
+    [data-theme="purple"] {
+      --accent: #b84dff;
+      --accent-glow: rgba(184, 77, 255, 0.55);
+      --accent-soft: rgba(184, 77, 255, 0.18);
+    }
+
+    [data-theme="emerald"] {
+      --accent: #00ffa3;
+      --accent-glow: rgba(0, 255, 163, 0.55);
+      --accent-soft: rgba(0, 255, 163, 0.18);
+    }
+
+    [data-theme="amber"] {
+      --accent: #ff9900;
+      --accent-glow: rgba(255, 153, 0, 0.55);
+      --accent-soft: rgba(255, 153, 0, 0.18);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      overscroll-behavior: none;
+      font-family: 'Nunito', sans-serif;
+      background-color: var(--bg-core);
+      color: #f8fafc;
+    }
+
+    .studio-canvas {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: max(12px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(14px, env(safe-area-inset-left));
+      background:
+        radial-gradient(circle at 50% 38%, var(--bg-radial) 0%, var(--bg-core) 70%),
+        var(--bg-core);
+      perspective: 1100px;
+      overflow: hidden;
+      touch-action: none;
+    }
+
+    .studio-grid {
+      position: absolute;
+      bottom: -18%;
+      left: -25%;
+      width: 150%;
+      height: 62%;
+      background-image:
+        linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+      background-size: 48px 48px;
+      transform: rotateX(74deg);
+      mask-image: radial-gradient(ellipse at 50% 35%, rgba(0, 0, 0, 0.92) 10%, transparent 66%);
+      -webkit-mask-image: radial-gradient(ellipse at 50% 35%, rgba(0, 0, 0, 0.92) 10%, transparent 66%);
+      pointer-events: none;
+    }
+
+    .ambient-halo {
+      position: absolute;
+      top: 24%;
+      width: 400px;
+      height: 400px;
+      border-radius: 50%;
+      background: radial-gradient(circle, var(--accent-soft) 0%, transparent 70%);
+      filter: blur(28px);
+      pointer-events: none;
+      transition: background 0.35s ease;
+    }
+
+    .top-hud {
+      position: relative;
+      width: 100%;
+      max-width: 1040px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      z-index: 60;
+      flex-wrap: wrap;
+    }
+
+    .hud-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .pill-card {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 14px;
+      border-radius: 999px;
+      background: var(--ui-glass);
+      border: 1px solid var(--ui-border);
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.32);
+      font-weight: 800;
+      font-size: 0.9rem;
+    }
+
+    .brand-title {
+      font-family: 'Fredoka', sans-serif;
+      font-size: 1.05rem;
+      color: var(--accent);
+      text-shadow: 0 0 12px var(--accent-glow);
+    }
+
+    .stat-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.08);
+      font-size: 0.85rem;
+    }
+
+    .hud-btn {
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      background: var(--ui-glass);
+      color: #f8fafc;
+      font-family: inherit;
+      font-weight: 800;
+      font-size: 0.84rem;
+      padding: 7px 13px;
+      border-radius: 999px;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: transform 0.16s ease, background 0.2s ease, border-color 0.2s ease;
+    }
+
+    .hud-btn:hover, .hud-btn:active {
+      transform: scale(1.04);
+      background: rgba(255, 255, 255, 0.16);
+    }
+
+    .hud-btn.active-diff {
+      border-color: var(--green);
+      background: rgba(0, 255, 163, 0.18);
+      color: #ffffff;
+    }
+
+    .hud-btn.install-btn {
+      border-color: var(--accent);
+      background: var(--accent-soft);
+      box-shadow: 0 0 14px var(--accent-glow);
+    }
+
+    .speech-banner {
+      position: relative;
+      z-index: 55;
+      max-width: 720px;
+      width: 94%;
+      background: rgba(18, 26, 44, 0.9);
+      border: 2px solid var(--accent);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45), 0 0 20px var(--accent-soft);
+      border-radius: 24px;
+      padding: 10px 18px;
+      text-align: center;
+      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(14px);
+    }
+
+    .speech-text {
+      font-family: 'Fredoka', sans-serif;
+      font-size: clamp(1rem, 2.2vw, 1.28rem);
+      font-weight: 600;
+      color: #ffffff;
+      line-height: 1.3;
+    }
+
+    .speech-sub {
+      margin-top: 3px;
+      font-size: 0.84rem;
+      color: #cbd5e1;
+      font-weight: 700;
+    }
+
+    .playfield {
+      position: relative;
+      flex: 1;
+      width: 100%;
+      max-width: 960px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform-style: preserve-3d;
+      overflow: visible;
+    }
+
+    .game-entities-layer {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 35;
+    }
+
+    .falling-orb {
+      position: absolute;
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Fredoka', sans-serif;
+      font-size: 1.45rem;
+      font-weight: 700;
+      color: #0b0e14;
+      background: radial-gradient(circle at 30% 30%, #ffffff 0%, var(--accent) 65%, #0284c7 100%);
+      box-shadow: 0 0 20px var(--accent-glow), inset 0 3px 6px rgba(255,255,255,0.9);
+      pointer-events: auto;
+      cursor: pointer;
+      transform: translate(-50%, -50%);
+      transition: transform 0.12s ease;
+    }
+
+    .falling-orb:active {
+      transform: translate(-50%, -50%) scale(1.18);
+    }
+
+    .scanner-pods-row {
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: none;
+      gap: 14px;
+      z-index: 45;
+      flex-wrap: wrap;
+      justify-content: center;
+      width: 96%;
+    }
+
+    .scanner-pods-row.visible {
+      display: flex;
+    }
+
+    .logic-pod {
+      width: 86px;
+      height: 86px;
+      border-radius: 22px;
+      background: rgba(20, 29, 48, 0.92);
+      border: 2px solid rgba(255, 255, 255, 0.22);
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.45);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.2rem;
+      cursor: pointer;
+      transition: transform 0.16s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .logic-pod:hover, .logic-pod:active {
+      transform: translateY(-4px) scale(1.06);
+      border-color: var(--accent);
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+
+    .logic-pod span.pod-label {
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: #cbd5e1;
+      margin-top: 2px;
+    }
+
+    .robot-stage {
+      position: relative;
+      width: 260px;
+      height: 340px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transform-style: preserve-3d;
+      cursor: pointer;
+      z-index: 20;
+      will-change: transform;
+    }
+
+    .robot-float-wrapper {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transform-style: preserve-3d;
+      animation: floatIdle 3.8s ease-in-out infinite;
+    }
+
+    @keyframes floatIdle {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-12px); }
+    }
+
+    .particles-layer {
+      position: absolute;
+      inset: -40px;
+      pointer-events: none;
+      transform-style: preserve-3d;
+      z-index: 40;
+    }
+
+    .floating-particle {
+      position: absolute;
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 700;
+      pointer-events: none;
+      animation: particleRise 1.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      text-shadow: 0 0 12px var(--accent-glow);
+    }
+
+    @keyframes particleRise {
+      0% { opacity: 0; transform: translate3d(0, 8px, 40px) scale(0.5); }
+      25% { opacity: 1; transform: translate3d(var(--dx-mid, 8px), -18px, 50px) scale(1.15); }
+      100% { opacity: 0; transform: translate3d(var(--dx-end, -12px), -88px, 60px) scale(0.85); }
+    }
+
+    .laser-scanner {
+      position: absolute;
+      top: 46%;
+      left: 50%;
+      width: 280px;
+      height: 185px;
+      transform: translateX(-50%) rotateX(-34deg) translateZ(45px);
+      transform-origin: top center;
+      background: linear-gradient(180deg, var(--accent-glow) 0%, var(--accent-soft) 55%, transparent 100%);
+      clip-path: polygon(28% 0%, 72% 0%, 100% 100%, 0% 100%);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+      z-index: 25;
+    }
+
+    .laser-scanner::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: #ffffff;
+      box-shadow: 0 0 14px var(--accent), 0 0 24px var(--accent);
+      animation: laserSweepLine 0.95s ease-in-out infinite alternate;
+    }
+
+    .robot-stage.mode-scan .laser-scanner {
+      opacity: 0.92;
+    }
+
+    @keyframes laserSweepLine {
+      0% { top: 6%; opacity: 0.6; }
+      100% { top: 94%; opacity: 1; }
+    }
+
+    .floor-shadow {
+      position: absolute;
+      bottom: 4px;
+      width: 140px;
+      height: 24px;
+      border-radius: 50%;
+      background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.68) 0%, rgba(0, 0, 0, 0.2) 55%, transparent 75%);
+      filter: blur(5px);
+      animation: shadowPulse 3.8s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    @keyframes shadowPulse {
+      0%, 100% { transform: scale(1); opacity: 0.88; }
+      50% { transform: scale(0.82); opacity: 0.52; }
+    }
+
+    .robot-head-pivot {
+      position: relative;
+      width: 194px;
+      height: 158px;
+      transform-style: preserve-3d;
+      z-index: 12;
+      will-change: transform;
+    }
+
+    .hat-prop {
+      position: absolute;
+      top: -46px;
+      left: 50%;
+      transform: translateX(-50%) translateZ(24px);
+      font-size: 3.1rem;
+      pointer-events: none;
+      filter: drop-shadow(0 6px 10px rgba(0,0,0,0.45));
+      transition: transform 0.25s ease;
+      z-index: 25;
+    }
+
+    .antenna {
+      position: absolute;
+      top: -30px;
+      width: 10px;
+      height: 34px;
+      background: linear-gradient(90deg, var(--shell-shadow), var(--shell-light) 45%, var(--shell-shadow));
+      border-radius: 8px;
+      cursor: pointer;
+      z-index: 15;
+    }
+
+    .antenna.left { left: 42px; transform: translateZ(-8px) rotateZ(-14deg); }
+    .antenna.right { right: 42px; transform: translateZ(-8px) rotateZ(14deg); }
+
+    .antenna.boing {
+      animation: antennaBoing 0.55s ease;
+    }
+
+    @keyframes antennaBoing {
+      0% { transform: rotateZ(0deg) scaleY(1); }
+      25% { transform: rotateZ(-32deg) scaleY(1.22); }
+      50% { transform: rotateZ(28deg) scaleY(0.85); }
+      75% { transform: rotateZ(-16deg) scaleY(1.1); }
+      100% { transform: rotateZ(0deg) scaleY(1); }
+    }
+
+    .antenna-tip {
+      position: absolute;
+      top: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 17px;
+      height: 17px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #ffffff 0%, var(--accent) 45%, #0a192f 100%);
+      box-shadow: 0 0 16px var(--accent-glow), 0 0 4px #fff;
+    }
+
+    .ear-pod {
+      position: absolute;
+      top: 50px;
+      width: 25px;
+      height: 58px;
+      border-radius: 16px;
+      background: radial-gradient(circle at 30% 30%, var(--shell-light), var(--shell-mid) 55%, var(--shell-shadow) 100%);
+      box-shadow: inset 0 2px 4px rgba(255,255,255,0.9), 0 8px 16px rgba(0,0,0,0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .ear-pod.left { left: -14px; transform: translateZ(-6px) rotateY(-22deg); }
+    .ear-pod.right { right: -14px; transform: translateZ(-6px) rotateY(22deg); }
+
+    .ear-ring {
+      width: 9px;
+      height: 32px;
+      border-radius: 10px;
+      background: var(--accent);
+      box-shadow: 0 0 12px var(--accent-glow);
+    }
+
+    .head-shell {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      border-radius: 70px 70px 62px 62px;
+      background:
+        radial-gradient(ellipse at 32% 22%, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.2) 38%, transparent 65%),
+        radial-gradient(circle at 50% 42%, var(--shell-light) 0%, var(--shell-mid) 62%, var(--shell-shadow) 94%, var(--shell-deep) 100%);
+      box-shadow:
+        inset 0 8px 16px rgba(255, 255, 255, 0.95),
+        inset 0 -14px 24px rgba(51, 65, 85, 0.42),
+        0 20px 34px rgba(0, 0, 0, 0.48);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform-style: preserve-3d;
+    }
+
+    .visor-bezel {
+      position: relative;
+      width: 160px;
+      height: 110px;
+      border-radius: 48px 48px 42px 42px;
+      padding: 5px;
+      background: linear-gradient(160deg, #8e9cb2 0%, #ffffff 50%, #64748b 100%);
+      box-shadow: 0 6px 14px rgba(15, 23, 42, 0.25), inset 0 2px 4px rgba(0, 0, 0, 0.3);
+      transform: translateZ(16px);
+      transform-style: preserve-3d;
+    }
+
+    .visor-screen {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      border-radius: 43px 43px 37px 37px;
+      background: radial-gradient(circle at 50% 35%, #192236 0%, var(--visor-mid) 52%, var(--visor-dark) 100%);
+      box-shadow: inset 0 10px 20px rgba(0, 0, 0, 0.9), inset 0 -3px 10px var(--accent-soft);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transform-style: preserve-3d;
+    }
+
+    .visor-gloss {
+      position: absolute;
+      top: 5px;
+      left: 14%;
+      width: 72%;
+      height: 34%;
+      border-radius: 50%;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.24) 0%, rgba(255, 255, 255, 0.02) 100%);
+      transform: rotate(-3deg);
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    .face-features {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      transform: translateZ(12px);
+      will-change: transform;
+    }
+
+    .eyes-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 26px;
+    }
+
+    .eye {
+      position: relative;
+      width: 30px;
+      height: 38px;
+      border-radius: 18px;
+      background: radial-gradient(circle at 50% 45%, #ffffff 0%, var(--accent) 55%, var(--accent) 100%);
+      box-shadow: 0 0 18px var(--accent-glow), 0 0 32px var(--accent-glow), inset 0 2px 5px #ffffff;
+      transition: all 0.14s ease;
+    }
+
+    .eye::after {
+      content: '';
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.94);
+    }
+
+    .eye.blink { height: 4px; border-radius: 4px; transform: scaleX(1.12); }
+    .eye.blink::after { opacity: 0; }
+
+    .face-features.happy .eye {
+      height: 20px;
+      border-radius: 22px 22px 6px 6px;
+      transform: translateY(-2px) scaleX(1.12);
+    }
+
+    .face-features.surprised .eye {
+      width: 36px;
+      height: 42px;
+      border-radius: 50%;
+    }
+
+    .face-features.dizzy .eye {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: 4px dashed #ffffff;
+      background: transparent;
+      animation: dizzySpin 0.8s linear infinite;
+    }
+    .face-features.dizzy .eye::after { opacity: 0; }
+
+    @keyframes dizzySpin {
+      100% { transform: rotate(360deg); }
+    }
+
+    .face-features.love .eye {
+      width: 30px;
+      height: 28px;
+      background: transparent !important;
+      box-shadow: none !important;
+      border-radius: 0;
+      animation: heartBeat 0.75s ease-in-out infinite;
+    }
+    .face-features.love .eye::before,
+    .face-features.love .eye::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      width: 16px;
+      height: 25px;
+      background: #ff2a7a;
+      border-radius: 16px 16px 0 0;
+      box-shadow: 0 0 16px rgba(255, 42, 122, 0.85);
+    }
+    .face-features.love .eye::before { left: 14px; transform: rotate(-45deg); transform-origin: 0 100%; }
+    .face-features.love .eye::after { left: 0; right: auto; transform: rotate(45deg); transform-origin: 100% 100%; }
+
+    @keyframes heartBeat {
+      0%, 100% { transform: scale(1); }
+      40% { transform: scale(1.25); }
+    }
+
+    .cheeks-row {
+      position: absolute;
+      top: 62%;
+      width: 112px;
+      display: flex;
+      justify-content: space-between;
+      opacity: 0.4;
+      pointer-events: none;
+    }
+
+    .face-features.happy .cheeks-row,
+    .face-features.love .cheeks-row {
+      opacity: 1;
+    }
+
+    .cheek {
+      width: 16px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent);
+      filter: blur(2px);
+      box-shadow: 0 0 10px var(--accent-glow);
+    }
+
+    .mouth {
+      width: 22px;
+      height: 9px;
+      border-bottom: 3.5px solid var(--accent);
+      border-radius: 0 0 14px 14px;
+      box-shadow: 0 4px 10px var(--accent-glow);
+      transition: all 0.16s ease;
+    }
+
+    .face-features.happy .mouth {
+      width: 28px;
+      height: 13px;
+      background: var(--accent);
+      border-radius: 4px 4px 18px 18px;
+    }
+
+    .face-features.speaking .mouth {
+      height: 14px;
+      border-radius: 50%;
+      background: var(--accent);
+      animation: mouthTalk 0.22s ease-in-out infinite alternate;
+    }
+
+    @keyframes mouthTalk {
+      0% { transform: scaleY(0.55) scaleX(1.1); }
+      100% { transform: scaleY(1.25) scaleX(0.9); }
+    }
+
+    .neck-joint {
+      width: 42px;
+      height: 18px;
+      margin-top: -6px;
+      border-radius: 10px;
+      background: linear-gradient(90deg, #1e293b, #475569 45%, #0f172a);
+      box-shadow: inset 0 4px 8px rgba(0, 0, 0, 0.7);
+      transform: translateZ(-8px);
+      z-index: 5;
+    }
+
+    .robot-torso-pivot {
+      position: relative;
+      width: 146px;
+      height: 124px;
+      margin-top: -5px;
+      transform-style: preserve-3d;
+      z-index: 6;
+      will-change: transform;
+    }
+
+    .torso-shell {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      border-radius: 42px 42px 62px 62px;
+      background:
+        radial-gradient(ellipse at 32% 20%, rgba(255, 255, 255, 0.95) 0%, transparent 48%),
+        radial-gradient(circle at 50% 38%, var(--shell-light) 0%, var(--shell-mid) 60%, var(--shell-shadow) 95%, var(--shell-deep) 100%);
+      box-shadow:
+        inset 0 6px 12px rgba(255, 255, 255, 0.95),
+        inset 0 -14px 22px rgba(51, 65, 85, 0.45),
+        0 20px 32px rgba(0, 0, 0, 0.45);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transform-style: preserve-3d;
+    }
+
+    .chest-core {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      background: radial-gradient(circle, #0f172a 55%, #64748b 100%);
+      padding: 4px;
+      box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.7), 0 2px 6px rgba(255, 255, 255, 0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transform: translateZ(12px);
+      cursor: pointer;
+    }
+
+    .chest-core-glow {
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #ffffff 0%, var(--accent) 58%, #020617 100%);
+      box-shadow: 0 0 18px var(--accent-glow);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Fredoka', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: #0b0e14;
+      text-shadow: 0 1px 2px rgba(255,255,255,0.7);
+    }
+
+    .robot-arm {
+      position: absolute;
+      top: 12px;
+      width: 30px;
+      height: 76px;
+      border-radius: 20px;
+      background:
+        radial-gradient(ellipse at 30% 20%, #ffffff 0%, transparent 45%),
+        radial-gradient(circle at 40% 40%, var(--shell-light) 0%, var(--shell-mid) 60%, var(--shell-shadow) 100%);
+      box-shadow: inset 0 4px 8px rgba(255,255,255,0.9), 0 12px 18px rgba(0,0,0,0.35);
+      transform-origin: top center;
+      will-change: transform;
+    }
+
+    .robot-arm.left { left: -36px; transform: rotateZ(12deg); }
+    .robot-arm.right { right: -36px; transform: rotateZ(-12deg); }
+
+    .robot-arm.right.waving {
+      animation: armWave 0.5s ease-in-out 3;
+    }
+
+    @keyframes armWave {
+      0%, 100% { transform: rotateZ(-12deg); }
+      50% { transform: rotateZ(-140deg) translateY(-8px); }
+    }
+
+    .bottom-deck {
+      position: relative;
+      z-index: 60;
+      width: 100%;
+      max-width: 960px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .game-controls-panel {
+      width: 100%;
+      min-height: 64px;
+      padding: 10px 14px;
+      border-radius: 24px;
+      background: var(--ui-glass);
+      border: 1px solid var(--ui-border);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .big-choice-btn {
+      font-family: 'Fredoka', sans-serif;
+      font-size: 1.08rem;
+      font-weight: 600;
+      padding: 10px 18px;
+      border-radius: 18px;
+      border: 2px solid rgba(255, 255, 255, 0.18);
+      background: rgba(255, 255, 255, 0.09);
+      color: #ffffff;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: transform 0.14s ease, background 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .big-choice-btn:hover, .big-choice-btn:active {
+      transform: translateY(-2px) scale(1.04);
+      background: rgba(255, 255, 255, 0.18);
+      border-color: var(--accent);
+      box-shadow: 0 0 16px var(--accent-glow);
+    }
+
+    .big-choice-btn.correct-flash {
+      background: rgba(0, 255, 163, 0.32) !important;
+      border-color: var(--green) !important;
+      box-shadow: 0 0 22px rgba(0, 255, 163, 0.7) !important;
+    }
+
+    .big-choice-btn.wrong-flash {
+      background: rgba(255, 77, 148, 0.32) !important;
+      border-color: var(--pink) !important;
+    }
+
+    .mode-tabs {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      flex-wrap: wrap;
+      width: 100%;
+    }
+
+    .mode-tab {
+      font-family: 'Fredoka', sans-serif;
+      font-size: 0.88rem;
+      font-weight: 600;
+      padding: 8px 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      background: rgba(15, 22, 36, 0.82);
+      color: #e2e8f0;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.18s ease;
+    }
+
+    .mode-tab:hover {
+      background: rgba(255, 255, 255, 0.14);
+    }
+
+    .mode-tab.active {
+      background: var(--accent-soft);
+      border-color: var(--accent);
+      color: #ffffff;
+      box-shadow: 0 0 16px var(--accent-glow);
+      transform: translateY(-2px);
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(5, 8, 15, 0.78);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 120;
+    }
+
+    .modal-backdrop.open {
+      display: flex;
+    }
+
+    .modal-card {
+      width: 100%;
+      max-width: 460px;
+      background: #131b2e;
+      border: 2px solid var(--accent);
+      border-radius: 28px;
+      padding: 24px;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.65), 0 0 28px var(--accent-soft);
+      text-align: center;
+    }
+
+    .modal-card h2 {
+      font-family: 'Fredoka', sans-serif;
+      font-size: 1.45rem;
+      color: var(--accent);
+      margin-bottom: 10px;
+    }
+
+    .modal-steps {
+      text-align: left;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 18px;
+      padding: 14px 16px;
+      margin: 14px 0 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      font-size: 0.94rem;
+      line-height: 1.4;
+    }
+
+    .badges-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin: 14px 0 18px;
+    }
+
+    .badge-item {
+      padding: 12px 10px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      opacity: 0.45;
+    }
+
+    .badge-item.unlocked {
+      opacity: 1;
+      border-color: var(--gold);
+      background: rgba(255, 212, 59, 0.14);
+      box-shadow: 0 0 16px rgba(255, 212, 59, 0.25);
+    }
+
+    @media (max-width: 640px) {
+      .robot-stage {
+        transform: scale(0.84);
+      }
+      .big-choice-btn {
+        padding: 8px 14px;
+        font-size: 0.98rem;
+      }
+      .mode-tab {
+        padding: 7px 11px;
+        font-size: 0.8rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <main class="studio-canvas" id="studioCanvas" data-theme="cyan">
+    <div class="studio-grid"></div>
+    <div class="ambient-halo"></div>
+
+    <header class="top-hud">
+      <div class="hud-group">
+        <div class="pill-card">
+          <span>🤖</span>
+          <span class="brand-title" id="botNameLabel">Bebo's Arcade</span>
+        </div>
+        <div class="pill-card">
+          <span class="stat-badge">⭐ <span id="starsCount">0</span></span>
+          <span class="stat-badge">🔥 <span id="streakCount">0</span></span>
+        </div>
+      </div>
+
+      <div class="hud-group">
+        <button class="hud-btn active-diff" id="diffToggleBtn" title="Switch Difficulty">🌱 Easy</button>
+        <button class="hud-btn" id="badgesBtn">🏆 Badges</button>
+        <button class="hud-btn" id="soundBtn">🔊 Sound</button>
+        <button class="hud-btn install-btn" id="installBtn">📲 Install App</button>
+      </div>
+    </header>
+
+    <section class="speech-banner" id="speechBanner">
+      <div class="speech-text" id="speechMain">Hi! I'm Bebo! Pick a game below or poke my tummy!</div>
+      <div class="speech-sub" id="speechSub">Tap any mini-game to earn Stars and unlock funny badges!</div>
+    </section>
+
+    <section class="playfield" id="playfield">
+      <div class="game-entities-layer" id="entitiesLayer"></div>
+      <div class="scanner-pods-row" id="scannerPodsRow"></div>
+
+      <div class="robot-stage" id="robotStage">
+        <div class="robot-float-wrapper" id="floatWrapper">
+          <div class="particles-layer" id="particlesLayer"></div>
+          <div class="laser-scanner" id="laserScanner"></div>
+
+          <div class="robot-head-pivot" id="headPivot">
+            <div class="hat-prop" id="hatProp"></div>
+            <div class="antenna left" id="antLeft"><span class="antenna-tip"></span></div>
+            <div class="antenna right" id="antRight"><span class="antenna-tip"></span></div>
+
+            <div class="ear-pod left"><span class="ear-ring"></span></div>
+            <div class="ear-pod right"><span class="ear-ring"></span></div>
+
+            <div class="head-shell">
+              <div class="visor-bezel">
+                <div class="visor-screen" id="visorScreen">
+                  <div class="visor-gloss"></div>
+                  <div class="face-features" id="faceFeatures">
+                    <div class="eyes-row">
+                      <div class="eye" id="eyeLeft"></div>
+                      <div class="eye" id="eyeRight"></div>
+                    </div>
+                    <div class="cheeks-row">
+                      <span class="cheek"></span>
+                      <span class="cheek"></span>
+                    </div>
+                    <div class="mouth" id="mouthEl"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="neck-joint"></div>
+
+          <div class="robot-torso-pivot" id="torsoPivot">
+            <div class="robot-arm left" id="armLeft"></div>
+            <div class="torso-shell">
+              <div class="chest-core" id="chestCore" title="Bebo's Energy Core">
+                <div class="chest-core-glow" id="coreDisplay">⚡</div>
+              </div>
+            </div>
+            <div class="robot-arm right" id="armRight"></div>
+          </div>
+        </div>
+
+        <div class="floor-shadow"></div>
+      </div>
+    </section>
+
+    <footer class="bottom-deck">
+      <div class="game-controls-panel" id="gameControlsPanel"></div>
+
+      <nav class="mode-tabs" id="modeTabs">
+        <button class="mode-tab active" data-game="silly">🤪 Silly Lab</button>
+        <button class="mode-tab" data-game="math">⚡ Core Math</button>
+        <button class="mode-tab" data-game="words">🔤 Word Catch</button>
+        <button class="mode-tab" data-game="simon">🧠 Visor Simon</button>
+        <button class="mode-tab" data-game="logic">🔍 Odd-One-Out</button>
+        <button class="mode-tab" data-game="beats">🎵 Count Beats</button>
+      </nav>
+    </footer>
+  </main>
+
+  <div class="modal-backdrop" id="installModal">
+    <div class="modal-card">
+      <h2>📲 Install Bebo on Your iPad</h2>
+      <p style="color:#cbd5e1; font-size:0.92rem;">Play Bebo's 3D Learning Arcade full-screen like a real iPad app!</p>
+      <div class="modal-steps">
+        <div><strong>1.</strong> Open this page in <strong>Safari</strong> on your iPad.</div>
+        <div><strong>2.</strong> Tap the <strong>Share button</strong> <span style="background:rgba(255,255,255,0.14);padding:2px 7px;border-radius:6px;">⬆️</span> in Safari's top toolbar.</div>
+        <div><strong>3.</strong> Scroll down and tap <strong>"Add to Home Screen"</strong> ➕.</div>
+        <div><strong>4.</strong> Tap <strong>Add</strong> — Bebo's icon will appear right on your iPad Home Screen!</div>
+      </div>
+      <button class="big-choice-btn" id="closeInstallModal" style="width:100%; justify-content:center; border-color:var(--accent);">Got It! 🚀</button>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="badgesModal">
+    <div class="modal-card">
+      <h2>🏆 Bebo's Star Badges</h2>
+      <p style="color:#cbd5e1; font-size:0.9rem;">Earn Stars in mini-games to unlock all 4 learning badges!</p>
+      <div class="badges-grid" id="badgesGrid"></div>
+      <button class="big-choice-btn" id="closeBadgesModal" style="width:100%; justify-content:center; border-color:var(--gold);">Keep Playing! ⭐</button>
+    </div>
+  </div>
+
+  <script>
+    (function setupPWA() {
+      const iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+        <defs>
+          <radialGradient id="bg" cx="50%" cy="40%" r="65%">
+            <stop offset="0%" stop-color="#1e2d4a"/>
+            <stop offset="100%" stop-color="#0b0e14"/>
+          </radialGradient>
+          <linearGradient id="shell" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stop-color="#ffffff"/>
+            <stop offset="100%" stop-color="#cbd5e1"/>
+          </linearGradient>
+        </defs>
+        <rect width="512" height="512" rx="112" fill="url(#bg)"/>
+        <line x1="185" y1="125" x2="165" y2="75" stroke="#cbd5e1" stroke-width="14" stroke-linecap="round"/>
+        <circle cx="162" cy="68" r="18" fill="#00f0ff"/>
+        <line x1="327" y1="125" x2="347" y2="75" stroke="#cbd5e1" stroke-width="14" stroke-linecap="round"/>
+        <circle cx="350" cy="68" r="18" fill="#00f0ff"/>
+        <rect x="96" y="120" width="320" height="270" rx="120" fill="url(#shell)"/>
+        <rect x="132" y="164" width="248" height="176" rx="76" fill="#090d16"/>
+        <rect x="182" y="212" width="44" height="58" rx="22" fill="#00f0ff"/>
+        <rect x="286" y="212" width="44" height="58" rx="22" fill="#00f0ff"/>
+        <path d="M 226 292 Q 256 320 286 292" stroke="#00f0ff" stroke-width="12" fill="none" stroke-linecap="round"/>
+      </svg>`;
+
+      const iconUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(iconSvg);
+      document.getElementById('appleTouchIcon').href = iconUrl;
+
+      const manifest = {
+        name: "Bebo's 3D Learning Arcade",
+        short_name: "Bebo Arcade",
+        description: "Interactive 3D Robot Learning & Silly Toybox Game for Kids",
+        start_url: "./",
+        display: "standalone",
+        background_color: "#0b0e14",
+        theme_color: "#0b0e14",
+        orientation: "any",
+        icons: [
+          { src: iconUrl, sizes: "192x192", type: "image/svg+xml", purpose: "any maskable" },
+          { src: iconUrl, sizes: "512x512", type: "image/svg+xml", purpose: "any maskable" }
+        ]
+      };
+
+      const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+      document.getElementById('appManifest').href = URL.createObjectURL(manifestBlob);
+
+      if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) {
+        const swCode = `
+          const CACHE_NAME = 'bebo-arcade-v1';
+          self.addEventListener('install', (e) => self.skipWaiting());
+          self.addEventListener('activate', (e) => self.clients.claim());
+          self.addEventListener('fetch', (e) => {
+            e.respondWith(
+              caches.match(e.request).then((cached) => cached || fetch(e.request).then((resp) => {
+                const clone = resp.clone();
+                caches.open(CACHE_NAME).then((cache) => cache.put(e.request, clone));
+                return resp;
+              }).catch(() => cached))
+            );
+          });
+        `;
+        const swBlob = new Blob([swCode], { type: 'application/javascript' });
+        navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(() => {});
+      }
+    })();
+
+    (function () {
+      const studioCanvas = document.getElementById('studioCanvas');
+      const playfield = document.getElementById('playfield');
+      const entitiesLayer = document.getElementById('entitiesLayer');
+      const scannerPodsRow = document.getElementById('scannerPodsRow');
+      const robotStage = document.getElementById('robotStage');
+      const headPivot = document.getElementById('headPivot');
+      const torsoPivot = document.getElementById('torsoPivot');
+      const faceFeatures = document.getElementById('faceFeatures');
+      const armLeft = document.getElementById('armLeft');
+      const armRight = document.getElementById('armRight');
+      const eyeLeft = document.getElementById('eyeLeft');
+      const eyeRight = document.getElementById('eyeRight');
+      const coreDisplay = document.getElementById('coreDisplay');
+      const particlesLayer = document.getElementById('particlesLayer');
+      const hatProp = document.getElementById('hatProp');
+      const speechMain = document.getElementById('speechMain');
+      const speechSub = document.getElementById('speechSub');
+      const gameControlsPanel = document.getElementById('gameControlsPanel');
+      const starsCountEl = document.getElementById('starsCount');
+      const streakCountEl = document.getElementById('streakCount');
+
+      const savedData = JSON.parse(localStorage.getItem('bebo_arcade_save') || '{"stars":0,"difficulty":"easy"}');
+      let stars = savedData.stars || 0;
+      let streak = 0;
+      let difficulty = savedData.difficulty || 'easy';
+      let soundOn = true;
+      let currentGame = 'silly';
+
+      function saveProgress() {
+        localStorage.setItem('bebo_arcade_save', JSON.stringify({ stars, difficulty }));
+        starsCountEl.textContent = stars;
+        streakCountEl.textContent = streak;
+      }
+      saveProgress();
+
+      let audioCtx = null;
+
+      function ensureAudio() {
+        if (!audioCtx) {
+          const AC = window.AudioContext || window.webkitAudioContext;
+          audioCtx = new AC();
+        }
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+      }
+
+      function playSfx(type, pitchOffset = 0) {
+        if (!soundOn) return;
+        try {
+          ensureAudio();
+          const now = audioCtx.currentTime;
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+
+          if (type === 'success') {
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(523.25, now);
+            osc.frequency.setValueAtTime(659.25, now + 0.09);
+            osc.frequency.setValueAtTime(783.99, now + 0.18);
+            gain.gain.setValueAtTime(0.12, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.36);
+            osc.start(now);
+            osc.stop(now + 0.38);
+          } else if (type === 'oops') {
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(260, now);
+            osc.frequency.linearRampToValueAtTime(165, now + 0.28);
+            gain.gain.setValueAtTime(0.07, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+            osc.start(now);
+            osc.stop(now + 0.32);
+          } else if (type === 'boing') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(220, now);
+            osc.frequency.exponentialRampToValueAtTime(760, now + 0.14);
+            osc.frequency.exponentialRampToValueAtTime(340, now + 0.28);
+            gain.gain.setValueAtTime(0.11, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+            osc.start(now);
+            osc.stop(now + 0.32);
+          } else if (type === 'giggle') {
+            osc.type = 'sine';
+            [540, 680, 580, 740, 620].forEach((f, idx) => {
+              osc.frequency.setValueAtTime(f, now + idx * 0.07);
+            });
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.38);
+            osc.start(now);
+            osc.stop(now + 0.4);
+          } else if (type === 'note') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(440 + pitchOffset, now);
+            gain.gain.setValueAtTime(0.13, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.24);
+            osc.start(now);
+            osc.stop(now + 0.26);
+          } else if (type === 'pop') {
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(480, now);
+            osc.frequency.exponentialRampToValueAtTime(880, now + 0.09);
+            gain.gain.setValueAtTime(0.09, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.1);
+            osc.start(now);
+            osc.stop(now + 0.11);
+          }
+        } catch (e) {}
+      }
+
+      function beboSay(mainText, subText = '', speakAloud = true) {
+        speechMain.textContent = mainText;
+        speechSub.textContent = subText;
+        if (!soundOn || !speakAloud || !('speechSynthesis' in window)) return;
+        try {
+          window.speechSynthesis.cancel();
+          const cleanText = mainText.replace(/[\u{1F300}-\u{1FAFF}]/gu, '');
+          const utter = new SpeechSynthesisUtterance(cleanText);
+          utter.lang = 'en-US';
+          utter.pitch = 1.28;
+          utter.rate = 1.04;
+          utter.onstart = () => faceFeatures.classList.add('speaking');
+          utter.onend = () => faceFeatures.classList.remove('speaking');
+          utter.onerror = () => faceFeatures.classList.remove('speaking');
+          window.speechSynthesis.speak(utter);
+        } catch (e) {}
+      }
+
+      let targetLookX = 0;
+      let targetLookY = 0;
+      let robotPosX = 0;
+      let jumpOffsetY = 0;
+      let jumpVelocity = 0;
+      let spinAngleY = 0;
+      let spinTargetY = 0;
+      let potionEffect = null;
+      let potionTimer = null;
+
+      const animState = { headX: 0, headY: 0, torsoX: 0, torsoY: 0, faceX: 0, faceY: 0, posX: 0 };
+
+      function spawnParticle(symbol, color = 'var(--accent)') {
+        const el = document.createElement('span');
+        el.className = 'floating-particle';
+        el.textContent = symbol;
+        el.style.color = color;
+        el.style.fontSize = (20 + Math.random() * 12) + 'px';
+        el.style.left = (20 + Math.random() * 60) + '%';
+        el.style.top = (15 + Math.random() * 25) + '%';
+        el.style.setProperty('--dx-mid', (Math.random() * 36 - 18) + 'px');
+        el.style.setProperty('--dx-end', (Math.random() * 60 - 30) + 'px');
+        particlesLayer.appendChild(el);
+        setTimeout(() => el.remove(), 1550);
+      }
+
+      function celebrateSuccess(msg, sub) {
+        stars += (difficulty === 'explorer' ? 2 : 1);
+        streak += 1;
+        saveProgress();
+        playSfx('success');
+        faceFeatures.classList.remove('dizzy', 'surprised');
+        faceFeatures.classList.add('happy');
+        armRight.classList.remove('waving');
+        void armRight.offsetWidth;
+        armRight.classList.add('waving');
+        jumpVelocity = -10.5;
+        spawnParticle('⭐', '#ffd43b');
+        spawnParticle('🎉', '#00ffa3');
+        beboSay(msg, sub);
+        setTimeout(() => faceFeatures.classList.remove('happy'), 1200);
+      }
+
+      function gentleRetry(msg, sub) {
+        streak = 0;
+        saveProgress();
+        playSfx('oops');
+        faceFeatures.classList.add('surprised');
+        beboSay(msg, sub);
+        setTimeout(() => faceFeatures.classList.remove('surprised'), 900);
+      }
+
+      function triggerJump() {
+        jumpVelocity = potionEffect === 'bubble' ? -15 : -11.5;
+        playSfx('boing');
+      }
+
+      function triggerSpin() {
+        spinTargetY += 360;
+        jumpVelocity = -8.5;
+        playSfx('pop');
+      }
+
+      let isDraggingBebo = false;
+
+      function handlePointerMove(clientX, clientY) {
+        const normX = (clientX - window.innerWidth / 2) / (window.innerWidth * 0.45);
+        const normY = (clientY - window.innerHeight / 2) / (window.innerHeight * 0.45);
+        targetLookX = Math.max(-1, Math.min(1, normX));
+        targetLookY = Math.max(-1, Math.min(1, normY));
+
+        if (currentGame === 'math' && isDraggingBebo) {
+          const pfRect = playfield.getBoundingClientRect();
+          const relX = (clientX - (pfRect.left + pfRect.width / 2)) / (pfRect.width * 0.38);
+          robotPosX = Math.max(-1, Math.min(1, relX));
+        }
+      }
+
+      window.addEventListener('pointerdown', (e) => {
+        ensureAudio();
+        if (currentGame === 'math' && e.target.closest('#playfield')) {
+          isDraggingBebo = true;
+          handlePointerMove(e.clientX, e.clientY);
+        }
+      });
+
+      window.addEventListener('pointermove', (e) => {
+        handlePointerMove(e.clientX, e.clientY);
+      }, { passive: true });
+
+      window.addEventListener('pointerup', () => {
+        isDraggingBebo = false;
+      });
+
+      window.addEventListener('keydown', (e) => {
+        if (currentGame === 'math') {
+          if (e.key === 'ArrowLeft' || e.key === 'a') robotPosX = Math.max(-1, robotPosX - 0.28);
+          if (e.key === 'ArrowRight' || e.key === 'd') robotPosX = Math.min(1, robotPosX + 0.28);
+        }
+        if (e.code === 'Space') {
+          e.preventDefault();
+          triggerJump();
+        }
+      });
+
+      setInterval(() => {
+        if (!faceFeatures.classList.contains('happy') && !faceFeatures.classList.contains('dizzy') && !faceFeatures.classList.contains('love')) {
+          eyeLeft.classList.add('blink');
+          eyeRight.classList.add('blink');
+          setTimeout(() => {
+            eyeLeft.classList.remove('blink');
+            eyeRight.classList.remove('blink');
+          }, 130);
+        }
+      }, 3400);
+
+      function animateLoop(ts) {
+        const t = ts * 0.001;
+        const speedMult = potionEffect === 'turbo' ? 2.4 : 1;
+
+        animState.headX += (targetLookX - animState.headX) * 0.1;
+        animState.headY += (targetLookY - animState.headY) * 0.1;
+        animState.torsoX += (targetLookX - animState.torsoX) * 0.06;
+        animState.torsoY += (targetLookY - animState.torsoY) * 0.06;
+        animState.faceX += (targetLookX - animState.faceX) * 0.16;
+        animState.faceY += (targetLookY - animState.faceY) * 0.16;
+        animState.posX += (robotPosX - animState.posX) * 0.16;
+
+        if (jumpOffsetY < 0 || jumpVelocity !== 0) {
+          jumpOffsetY += jumpVelocity;
+          jumpVelocity += (potionEffect === 'bubble' ? 0.42 : 0.68);
+          if (jumpOffsetY >= 0) {
+            jumpOffsetY = 0;
+            jumpVelocity = 0;
+          }
+        }
+
+        spinAngleY += (spinTargetY - spinAngleY) * 0.11;
+        if (Math.abs(spinTargetY - spinAngleY) < 0.3) {
+          spinAngleY = spinTargetY % 360;
+          spinTargetY = spinAngleY;
+        }
+
+        const maxSlidePx = Math.min(260, playfield.clientWidth * 0.34);
+        const slideX = animState.posX * maxSlidePx;
+        const wiggleZ = potionEffect === 'giggle' ? Math.sin(t * 22) * 7 : 0;
+
+        robotStage.style.transform = `
+          translate3d(${slideX}px, ${jumpOffsetY}px, 0px)
+          rotateY(${spinAngleY}deg)
+          rotateZ(${wiggleZ}deg)
+        `;
+
+        headPivot.style.transform = `
+          translate3d(${animState.headX * 12}px, ${animState.headY * 9}px, 20px)
+          rotateX(${-animState.headY * 20}deg)
+          rotateY(${animState.headX * 26}deg)
+          rotateZ(${Math.sin(t * 2 * speedMult) * 3}deg)
+        `;
+
+        faceFeatures.style.transform = `
+          translate3d(${animState.faceX * 14}px, ${animState.faceY * 10}px, 14px)
+        `;
+
+        torsoPivot.style.transform = `
+          translate3d(${animState.torsoX * 6}px, 0px, 0px)
+          rotateX(${-animState.torsoY * 10}deg)
+          rotateY(${animState.torsoX * 14}deg)
+        `;
+
+        if (!armRight.classList.contains('waving')) {
+          armRight.style.transform = `rotateZ(${-12 - animState.torsoX * 10 + jumpOffsetY * 0.7}deg)`;
+        }
+        armLeft.style.transform = `rotateZ(${12 - animState.torsoX * 10 - jumpOffsetY * 0.7}deg)`;
+
+        requestAnimationFrame(animateLoop);
+      }
+      requestAnimationFrame(animateLoop);
+
+      let activeIntervals = [];
+      let activeTimeouts = [];
+
+      function clearGameTimers() {
+        activeIntervals.forEach(clearInterval);
+        activeTimeouts.forEach(clearTimeout);
+        activeIntervals = [];
+        activeTimeouts = [];
+        entitiesLayer.innerHTML = '';
+        scannerPodsRow.classList.remove('visible');
+        scannerPodsRow.innerHTML = '';
+        robotStage.classList.remove('mode-scan');
+        robotPosX = 0;
+        coreDisplay.textContent = '⚡';
+      }
+
+      const hats = ['', '👑', '🎉', '🤠', '🎓', '🧢'];
+      let hatIndex = 0;
+
+      function applyPotion(type) {
+        clearTimeout(potionTimer);
+        potionEffect = type;
+        if (type === 'turbo') {
+          studioCanvas.setAttribute('data-theme', 'amber');
+          triggerSpin();
+          beboSay("WHOAA! Turbo Candy activated! Super fast Bebo!", "Bebo is supercharged for 8 seconds!");
+        } else if (type === 'bubble') {
+          studioCanvas.setAttribute('data-theme', 'purple');
+          triggerJump();
+          beboSay("Bloop bloop! Bubble Berry makes me float like a balloon!", "Tap Jump to bounce extra high!");
+        } else if (type === 'giggle') {
+          studioCanvas.setAttribute('data-theme', 'emerald');
+          playSfx('giggle');
+          faceFeatures.classList.add('happy');
+          beboSay("Hehehe! Giggle Soda makes my tummy wiggle!", "Poke Bebo's antennas, visor, or tummy!");
+        }
+        potionTimer = setTimeout(() => {
+          potionEffect = null;
+          faceFeatures.classList.remove('happy');
+          studioCanvas.setAttribute('data-theme', 'cyan');
+        }, 8000);
+      }
+
+      function initSillyLab() {
+        clearGameTimers();
+        beboSay("Welcome to Bebo's Silly Lab! Poke me or try a funny potion!", "Tap my antennas, visor, tummy core, or buttons below!");
+        gameControlsPanel.innerHTML = `
+          <button class="big-choice-btn" id="btnWave">👋 Wave</button>
+          <button class="big-choice-btn" id="btnJump">⬆️ Bounce</button>
+          <button class="big-choice-btn" id="btnSpin">🔄 360° Spin</button>
+          <button class="big-choice-btn" id="btnHat">🎩 Switch Hat</button>
+          <button class="big-choice-btn" id="btnTurbo">🍬 Turbo Candy</button>
+          <button class="big-choice-btn" id="btnBubble">🫐 Bubble Berry</button>
+          <button class="big-choice-btn" id="btnGiggle">🥤 Giggle Soda</button>
+        `;
+
+        document.getElementById('btnWave').onclick = () => {
+          faceFeatures.classList.add('happy');
+          armRight.classList.remove('waving');
+          void armRight.offsetWidth;
+          armRight.classList.add('waving');
+          playSfx('pop');
+          beboSay("Hello friend! High five!", "Wave back at Bebo!");
+          setTimeout(() => faceFeatures.classList.remove('happy'), 1200);
+        };
+        document.getElementById('btnJump').onclick = triggerJump;
+        document.getElementById('btnSpin').onclick = triggerSpin;
+        document.getElementById('btnHat').onclick = () => {
+          hatIndex = (hatIndex + 1) % hats.length;
+          hatProp.textContent = hats[hatIndex];
+          playSfx('pop');
+          beboSay(hats[hatIndex] ? `Ooh! How do I look in my new ${hats[hatIndex]} hat?` : "No hat mode! Shiny head!", "Tap Switch Hat to cycle styles!");
+        };
+        document.getElementById('btnTurbo').onclick = () => applyPotion('turbo');
+        document.getElementById('btnBubble').onclick = () => applyPotion('bubble');
+        document.getElementById('btnGiggle').onclick = () => applyPotion('giggle');
+      }
+
+      document.getElementById('antLeft').onclick = document.getElementById('antRight').onclick = (e) => {
+        e.stopPropagation();
+        const ant = e.currentTarget;
+        ant.classList.remove('boing');
+        void ant.offsetWidth;
+        ant.classList.add('boing');
+        playSfx('boing');
+        faceFeatures.classList.add('dizzy');
+        spawnParticle('💫', '#00f0ff');
+        beboSay("BOING-OING! My antennas are wiggling!", "You found Bebo's bouncy antennas!");
+        setTimeout(() => faceFeatures.classList.remove('dizzy'), 1300);
+      };
+
+      document.getElementById('visorScreen').onclick = (e) => {
+        e.stopPropagation();
+        playSfx('boing');
+        jumpVelocity = -8;
+        faceFeatures.classList.add('surprised');
+        spawnParticle('✨', '#ffffff');
+        spawnParticle('💨', '#00f0ff');
+        beboSay("ACHOO!! Excuse me! Dust on my visor!", "Bless you, Bebo!");
+        setTimeout(() => faceFeatures.classList.remove('surprised'), 1000);
+      };
+
+      document.getElementById('chestCore').onclick = (e) => {
+        e.stopPropagation();
+        if (currentGame === 'math') return;
+        playSfx('giggle');
+        faceFeatures.classList.add('happy');
+        spawnParticle('😂', '#ffd43b');
+        beboSay("HEHEHE! Stop, my chest core is super ticklish!", "Poke Bebo's tummy again!");
+        setTimeout(() => faceFeatures.classList.remove('happy'), 1100);
+      };
+
+      function initMathGame() {
+        clearGameTimers();
+        let targetSum = 0;
+        let currentSum = 0;
+
+        function startNewMathRound() {
+          entitiesLayer.innerHTML = '';
+          currentSum = 0;
+          targetSum = difficulty === 'easy'
+            ? (Math.floor(Math.random() * 5) + 4)
+            : (Math.floor(Math.random() * 10) + 8);
+          coreDisplay.textContent = `${currentSum}/${targetSum}`;
+          beboSay(`Charge my core to ${targetSum}!`, `Slide Bebo or tap energy orbs to add up to ${targetSum}!`);
+        }
+
+        startNewMathRound();
+
+        gameControlsPanel.innerHTML = `
+          <button class="big-choice-btn" id="mathLeft">⬅️ Move Left</button>
+          <button class="big-choice-btn" id="mathJump">⬆️ Hop Catch</button>
+          <button class="big-choice-btn" id="mathRight">Move Right ➡️</button>
+          <button class="big-choice-btn" id="mathNew">🔄 New Target</button>
+        `;
+
+        document.getElementById('mathLeft').onclick = () => { robotPosX = Math.max(-1, robotPosX - 0.35); };
+        document.getElementById('mathRight').onclick = () => { robotPosX = Math.min(1, robotPosX + 0.35); };
+        document.getElementById('mathJump').onclick = triggerJump;
+        document.getElementById('mathNew').onclick = startNewMathRound;
+
+        const spawnRate = difficulty === 'easy' ? 1500 : 1150;
+        const fallSpeed = difficulty === 'easy' ? 2.1 : 3.2;
+
+        const spawner = setInterval(() => {
+          if (currentGame !== 'math') return;
+          const orb = document.createElement('div');
+          const needed = Math.max(1, targetSum - currentSum);
+          const isHelpful = Math.random() < 0.65;
+          const val = isHelpful
+            ? Math.min(needed, Math.floor(Math.random() * Math.min(5, needed)) + 1)
+            : (Math.floor(Math.random() * 5) + 2);
+
+          orb.className = 'falling-orb';
+          orb.textContent = `+${val}`;
+          let xPct = 14 + Math.random() * 72;
+          let yPx = 10;
+          orb.style.left = xPct + '%';
+          orb.style.top = yPx + 'px';
+          entitiesLayer.appendChild(orb);
+
+          function collectOrb() {
+            if (!orb.parentNode) return;
+            orb.remove();
+            currentSum += val;
+            if (currentSum === targetSum) {
+              coreDisplay.textContent = `${targetSum}!`;
+              celebrateSuccess(`AWESOME! ${targetSum} reached! Core fully charged!`, `You earned a Star! Get ready for the next target!`);
+              setTimeout(() => { if (currentGame === 'math') startNewMathRound(); }, 1300);
+            } else if (currentSum > targetSum) {
+              gentleRetry(`Oops! ${currentSum} went over ${targetSum}! Let's reset to 0!`, `Try smaller numbers to hit ${targetSum} exactly!`);
+              currentSum = 0;
+              coreDisplay.textContent = `0/${targetSum}`;
+            } else {
+              playSfx('pop');
+              coreDisplay.textContent = `${currentSum}/${targetSum}`;
+              spawnParticle(`+${val}`, '#00f0ff');
+              beboSay(`Nice! ${currentSum} so far — need ${targetSum - currentSum} more!`, `Keep catching numbers to reach ${targetSum}!`, false);
+            }
+          }
+
+          orb.onclick = collectOrb;
+
+          const fallTimer = setInterval(() => {
+            if (currentGame !== 'math' || !orb.parentNode) {
+              clearInterval(fallTimer);
+              return;
+            }
+            yPx += fallSpeed;
+            orb.style.top = yPx + 'px';
+
+            const orbRect = orb.getBoundingClientRect();
+            const botRect = robotStage.getBoundingClientRect();
+            const overlap = !(
+              orbRect.right < botRect.left + 25 ||
+              orbRect.left > botRect.right - 25 ||
+              orbRect.bottom < botRect.top + 30 ||
+              orbRect.top > botRect.bottom - 20
+            );
+            if (overlap) {
+              clearInterval(fallTimer);
+              collectOrb();
+            } else if (yPx > playfield.clientHeight) {
+              clearInterval(fallTimer);
+              orb.remove();
+            }
+          }, 20);
+          activeIntervals.push(fallTimer);
+        }, spawnRate);
+
+        activeIntervals.push(spawner);
+      }
+
+      const wordBankEasy = [
+        { emoji: '☀️', word: 'SUN', missingIdx: 0, options: ['S', 'M', 'P'] },
+        { emoji: '🐱', word: 'CAT', missingIdx: 0, options: ['C', 'B', 'D'] },
+        { emoji: '🐶', word: 'DOG', missingIdx: 2, options: ['G', 'T', 'N'] },
+        { emoji: '🐝', word: 'BEE', missingIdx: 0, options: ['B', 'R', 'K'] },
+        { emoji: '🐸', word: 'FROG', missingIdx: 0, options: ['F', 'L', 'T'] },
+        { emoji: '⭐', word: 'STAR', missingIdx: 1, options: ['T', 'P', 'N'] },
+        { emoji: '🐟', word: 'FISH', missingIdx: 0, options: ['F', 'W', 'H'] },
+        { emoji: '🚀', word: 'SHIP', missingIdx: 0, options: ['S', 'C', 'B'] }
+      ];
+
+      const wordBankExplorer = [
+        { emoji: '🪐', word: 'PLANET', missingIdx: 2, options: ['A', 'O', 'E'] },
+        { emoji: '🤖', word: 'ROBOT', missingIdx: 2, options: ['B', 'P', 'D'] },
+        { emoji: '🌈', word: 'RAINBOW', missingIdx: 4, options: ['B', 'M', 'V'] },
+        { emoji: '🦖', word: 'DINO', missingIdx: 1, options: ['I', 'E', 'U'] },
+        { emoji: '🎸', word: 'GUITAR', missingIdx: 3, options: ['T', 'D', 'K'] },
+        { emoji: '🍎', word: 'APPLE', missingIdx: 1, options: ['P', 'B', 'L'] }
+      ];
+
+      function initWordGame() {
+        clearGameTimers();
+
+        function nextWord() {
+          const bank = difficulty === 'easy' ? wordBankEasy : wordBankExplorer;
+          const item = bank[Math.floor(Math.random() * bank.length)];
+          const chars = item.word.split('');
+          const answer = chars[item.missingIdx];
+          chars[item.missingIdx] = '_';
+          const puzzle = chars.join(' ');
+
+          coreDisplay.textContent = item.emoji;
+          beboSay(`Spell ${item.emoji} :  ${puzzle}`, `Tap the missing letter to complete the word!`);
+
+          const shuffled = [...item.options].sort(() => Math.random() - 0.5);
+          gameControlsPanel.innerHTML = shuffled.map(letter => `
+            <button class="big-choice-btn" data-letter="${letter}">🔤 ${letter}</button>
+          `).join('') + `<button class="big-choice-btn" id="hearWordBtn">🔊 Hear Word</button>`;
+
+          document.getElementById('hearWordBtn').onclick = () => {
+            beboSay(`The word is ${item.word}!`, `${item.emoji} ${puzzle}`);
+          };
+
+          gameControlsPanel.querySelectorAll('[data-letter]').forEach(btn => {
+            btn.onclick = () => {
+              const picked = btn.getAttribute('data-letter');
+              if (picked === answer) {
+                btn.classList.add('correct-flash');
+                celebrateSuccess(`YES! ${item.emoji} ${item.word}! Great spelling!`, `You spelled ${item.word} and earned a Star!`);
+                setTimeout(() => { if (currentGame === 'words') nextWord(); }, 1350);
+              } else {
+                btn.classList.add('wrong-flash');
+                gentleRetry(`Not quite! "${picked}" doesn't fit ${puzzle}. Try again!`, `Listen to the sound of ${item.word}!`);
+              }
+            };
+          });
+        }
+
+        nextWord();
+      }
+
+      const simonMoves = [
+        { id: 'cyan', label: 'Cyan Wave', icon: '👋', theme: 'cyan', pitch: 0 },
+        { id: 'purple', label: 'Purple Spin', icon: '🔄', theme: 'purple', pitch: 120 },
+        { id: 'emerald', label: 'Green Bounce', icon: '⬆️', theme: 'emerald', pitch: 240 },
+        { id: 'amber', label: 'Gold Groove', icon: '⚡', theme: 'amber', pitch: 360 }
+      ];
+
+      function initSimonGame() {
+        clearGameTimers();
+        let sequence = [];
+        let playerStep = 0;
+        let locked = true;
+
+        gameControlsPanel.innerHTML = simonMoves.map(m => `
+          <button class="big-choice-btn" data-simon="${m.id}">${m.icon} ${m.label}</button>
+        `).join('');
+
+        function performMove(moveObj) {
+          studioCanvas.setAttribute('data-theme', moveObj.theme);
+          playSfx('note', moveObj.pitch);
+          faceFeatures.classList.add('happy');
+          if (moveObj.id === 'cyan') {
+            armRight.classList.remove('waving');
+            void armRight.offsetWidth;
+            armRight.classList.add('waving');
+          } else if (moveObj.id === 'purple') {
+            spinTargetY += 360;
+          } else if (moveObj.id === 'emerald') {
+            jumpVelocity = -10.5;
+          } else if (moveObj.id === 'amber') {
+            spawnParticle('⚡', '#ff9900');
+            jumpVelocity = -6.5;
+          }
+          setTimeout(() => faceFeatures.classList.remove('happy'), 450);
+        }
+
+        function playSequence() {
+          locked = true;
+          playerStep = 0;
+          const nextMove = simonMoves[Math.floor(Math.random() * simonMoves.length)];
+          sequence.push(nextMove);
+          coreDisplay.textContent = sequence.length;
+          beboSay(`Watch closely! Remember ${sequence.length} move${sequence.length > 1 ? 's' : ''}!`, `Wait for Bebo to finish, then repeat the pattern!`);
+
+          const gap = difficulty === 'easy' ? 880 : 620;
+          sequence.forEach((mv, idx) => {
+            const tId = setTimeout(() => {
+              performMove(mv);
+              if (idx === sequence.length - 1) {
+                const unlockId = setTimeout(() => {
+                  locked = false;
+                  beboSay("Your turn! Repeat Bebo's moves!", `Step 1 of ${sequence.length}`, false);
+                }, 550);
+                activeTimeouts.push(unlockId);
+              }
+            }, 650 + idx * gap);
+            activeTimeouts.push(tId);
+          });
+        }
+
+        gameControlsPanel.querySelectorAll('[data-simon]').forEach(btn => {
+          btn.onclick = () => {
+            if (locked || currentGame !== 'simon') return;
+            const id = btn.getAttribute('data-simon');
+            const mv = simonMoves.find(m => m.id === id);
+            performMove(mv);
+
+            if (mv.id === sequence[playerStep].id) {
+              playerStep++;
+              if (playerStep === sequence.length) {
+                locked = true;
+                celebrateSuccess(`Super memory! Pattern of ${sequence.length} mastered!`, `Get ready for the next step!`);
+                const nextId = setTimeout(() => { if (currentGame === 'simon') playSequence(); }, 1300);
+                activeTimeouts.push(nextId);
+              }
+            } else {
+              locked = true;
+              sequence = [];
+              gentleRetry("Oops! Wrong move in the pattern! Let's try a fresh pattern!", "Watch Bebo's colors and moves carefully!");
+              const restartId = setTimeout(() => { if (currentGame === 'simon') playSequence(); }, 1400);
+              activeTimeouts.push(restartId);
+            }
+          };
+        });
+
+        playSequence();
+      }
+
+      const logicPuzzles = [
+        { items: ['🍎', '🍌', '🍇', '🚗'], oddIdx: 3, hint: 'Three are yummy fruits, one is a vehicle!' },
+        { items: ['🐶', '🐱', '🐰', '🍕'], oddIdx: 3, hint: 'Three are cute animals, one is lunch!' },
+        { items: ['🔴', '🔵', '🟢', '⭐'], oddIdx: 3, hint: 'Three are circles, one is a pointy star!' },
+        { items: ['☀️', '🌙', '⭐', '👟'], oddIdx: 3, hint: 'Three shine in the sky, one goes on your foot!' },
+        { items: ['🐠', '🐙', '🐳', '🦁'], oddIdx: 3, hint: 'Three swim in the ocean, one roars on land!' },
+        { items: ['2', '4', '6', '7'], oddIdx: 3, hint: 'Three are even numbers, 7 is an odd number!' }
+      ];
+
+      function initLogicGame() {
+        clearGameTimers();
+        robotStage.classList.add('mode-scan');
+        scannerPodsRow.classList.add('visible');
+
+        function nextLogicRound() {
+          const puzzle = logicPuzzles[Math.floor(Math.random() * logicPuzzles.length)];
+          const indices = [0, 1, 2, 3].sort(() => Math.random() - 0.5);
+
+          beboSay("Laser Scanner active! Which one does NOT belong?", "Tap the Odd-One-Out pod below!");
+          gameControlsPanel.innerHTML = `
+            <button class="big-choice-btn" id="logicHintBtn">💡 Need a Hint?</button>
+            <button class="big-choice-btn" id="logicSkipBtn">⏭️ Next Puzzle</button>
+          `;
+
+          document.getElementById('logicHintBtn').onclick = () => {
+            beboSay(puzzle.hint, "Now tap the one that doesn't match!");
+          };
+          document.getElementById('logicSkipBtn').onclick = nextLogicRound;
+
+          scannerPodsRow.innerHTML = indices.map(origIdx => `
+            <button class="logic-pod" data-is-odd="${origIdx === puzzle.oddIdx}">
+              <span>${puzzle.items[origIdx]}</span>
+              <span class="pod-label">SCAN</span>
+            </button>
+          `).join('');
+
+          scannerPodsRow.querySelectorAll('.logic-pod').forEach(pod => {
+            pod.onclick = () => {
+              const isOdd = pod.getAttribute('data-is-odd') === 'true';
+              if (isOdd) {
+                celebrateSuccess(`BINGO! ${puzzle.hint}`, "Your brain is sharper than Bebo's laser!");
+                setTimeout(() => { if (currentGame === 'logic') nextLogicRound(); }, 1500);
+              } else {
+                gentleRetry("Beep-boop! That one fits the group! Try another pod!", puzzle.hint);
+              }
+            };
+          });
+        }
+
+        nextLogicRound();
+      }
+
+      function initBeatsGame() {
+        clearGameTimers();
+        let targetBeats = 3;
+        let isPlayingBeats = false;
+
+        function playBeatRound() {
+          if (isPlayingBeats) return;
+          isPlayingBeats = true;
+          const minB = difficulty === 'easy' ? 2 : 4;
+          const maxB = difficulty === 'easy' ? 5 : 8;
+          targetBeats = Math.floor(Math.random() * (maxB - minB + 1)) + minB;
+
+          coreDisplay.textContent = '👂';
+          beboSay("Listen and count how many times I bounce!", "Count every chime carefully!");
+
+          const intervalMs = difficulty === 'easy' ? 680 : 480;
+          for (let i = 0; i < targetBeats; i++) {
+            const tId = setTimeout(() => {
+              jumpVelocity = -8.5;
+              playSfx('note', i * 55);
+              spawnParticle('🎵', '#00ffa3');
+              if (i === targetBeats - 1) {
+                isPlayingBeats = false;
+                coreDisplay.textContent = '?';
+                beboSay("How many bounces did you count?", "Tap the matching number below!", false);
+              }
+            }, 600 + i * intervalMs);
+            activeTimeouts.push(tId);
+          }
+
+          const choices = new Set([targetBeats]);
+          while (choices.size < 4) {
+            const candidate = Math.max(1, targetBeats + (Math.floor(Math.random() * 5) - 2));
+            choices.add(candidate);
+          }
+
+          gameControlsPanel.innerHTML = [...choices].sort((a, b) => a - b).map(num => `
+            <button class="big-choice-btn" data-beat-ans="${num}">🔢 ${num}</button>
+          `).join('') + `<button class="big-choice-btn" id="replayBeatsBtn">🔁 Replay Beats</button>`;
+
+          document.getElementById('replayBeatsBtn').onclick = () => {
+            if (isPlayingBeats) return;
+            isPlayingBeats = true;
+            for (let i = 0; i < targetBeats; i++) {
+              const tId = setTimeout(() => {
+                jumpVelocity = -8.5;
+                playSfx('note', i * 55);
+                spawnParticle('🎵', '#00ffa3');
+                if (i === targetBeats - 1) isPlayingBeats = false;
+              }, 300 + i * intervalMs);
+              activeTimeouts.push(tId);
+            }
+          };
+
+          gameControlsPanel.querySelectorAll('[data-beat-ans]').forEach(btn => {
+            btn.onclick = () => {
+              if (isPlayingBeats) return;
+              const guess = Number(btn.getAttribute('data-beat-ans'));
+              if (guess === targetBeats) {
+                coreDisplay.textContent = targetBeats;
+                celebrateSuccess(`SPOT ON! I bounced ${targetBeats} times!`, "Super listening ears! Let's count another beat!");
+                setTimeout(() => { if (currentGame === 'beats') playBeatRound(); }, 1400);
+              } else {
+                gentleRetry(`Close! It wasn't ${guess}. Tap Replay Beats to listen again!`, "Count each musical chime out loud!");
+              }
+            };
+          });
+        }
+
+        playBeatRound();
+      }
+
+      function switchGame(gameId) {
+        currentGame = gameId;
+        document.querySelectorAll('.mode-tab').forEach(tab => {
+          tab.classList.toggle('active', tab.getAttribute('data-game') === gameId);
+        });
+        if (gameId === 'silly') initSillyLab();
+        else if (gameId === 'math') initMathGame();
+        else if (gameId === 'words') initWordGame();
+        else if (gameId === 'simon') initSimonGame();
+        else if (gameId === 'logic') initLogicGame();
+        else if (gameId === 'beats') initBeatsGame();
+      }
+
+      document.querySelectorAll('.mode-tab').forEach(tab => {
+        tab.addEventListener('click', () => switchGame(tab.getAttribute('data-game')));
+      });
+
+      const diffToggleBtn = document.getElementById('diffToggleBtn');
+      function updateDiffUI() {
+        diffToggleBtn.textContent = difficulty === 'easy' ? '🌱 Easy' : '🚀 Explorer';
+      }
+      updateDiffUI();
+
+      diffToggleBtn.onclick = () => {
+        difficulty = difficulty === 'easy' ? 'explorer' : 'easy';
+        updateDiffUI();
+        saveProgress();
+        playSfx('pop');
+        beboSay(`Switched to ${difficulty === 'easy' ? 'Easy' : 'Explorer'} mode!`, "Let's keep playing!");
+        switchGame(currentGame);
+      };
+
+      const soundBtn = document.getElementById('soundBtn');
+      soundBtn.onclick = () => {
+        soundOn = !soundOn;
+        soundBtn.textContent = soundOn ? '🔊 Sound' : '🔇 Muted';
+        if (!soundOn && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+      };
+
+      const badgeDefs = [
+        { icon: '🌟', title: 'Bebo Rookie', req: 3, desc: 'Earn 3 Stars' },
+        { icon: '⚡', title: 'Number Ninja', req: 8, desc: 'Earn 8 Stars' },
+        { icon: '📚', title: 'Word Wizard', req: 15, desc: 'Earn 15 Stars' },
+        { icon: '👑', title: 'Arcade Champion', req: 25, desc: 'Earn 25 Stars' }
+      ];
+
+      const badgesModal = document.getElementById('badgesModal');
+      document.getElementById('badgesBtn').onclick = () => {
+        const grid = document.getElementById('badgesGrid');
+        grid.innerHTML = badgeDefs.map(b => {
+          const unlocked = stars >= b.req;
+          return `
+            <div class="badge-item ${unlocked ? 'unlocked' : ''}">
+              <div style="font-size:2rem;">${unlocked ? b.icon : '🔒'}</div>
+              <div style="font-family:'Fredoka',sans-serif; font-weight:700; margin-top:4px;">${b.title}</div>
+              <div style="font-size:0.78rem; color:#cbd5e1;">${unlocked ? 'UNLOCKED!' : b.desc}</div>
+            </div>
+          `;
+        }).join('');
+        badgesModal.classList.add('open');
+      };
+      document.getElementById('closeBadgesModal').onclick = () => badgesModal.classList.remove('open');
+
+      const installModal = document.getElementById('installModal');
+      document.getElementById('installBtn').onclick = () => installModal.classList.add('open');
+      document.getElementById('closeInstallModal').onclick = () => installModal.classList.remove('open');
+
+      initSillyLab();
+    })();
+  </script>
+</body>
+</html>
